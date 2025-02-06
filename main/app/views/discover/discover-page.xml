@@ -1,0 +1,45 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="onNavigatingTo">
+    <ActionBar title="HawkerGo" />
+    
+    <ScrollView>
+        <StackLayout>
+            <SearchBar hint="Search hawker centers..." />
+            
+            <Label text="Recommended for You" class="text-xl font-bold p-4" />
+            <ListView items="{{ recommendations }}" height="200" class="list-group">
+                <ListView.itemTemplate>
+                    <GridLayout columns="*, auto" class="card">
+                        <StackLayout col="0">
+                            <Label text="{{ name }}" class="font-bold text-lg" />
+                            <Label text="{{ address }}" class="text-gray-600" />
+                            <FlexboxLayout>
+                                <Label text="{{ crowdLevel }}" class="text-sm" />
+                                <Label text=" • " class="text-sm text-gray-400" />
+                                <Label text="{{ distance }}" class="text-sm" />
+                            </FlexboxLayout>
+                        </StackLayout>
+                        <Label col="1" text="{{ rating }}" class="text-lg font-bold text-orange-500" />
+                    </GridLayout>
+                </ListView.itemTemplate>
+            </ListView>
+            
+            <Label text="All Hawker Centers" class="text-xl font-bold p-4" />
+            <ListView items="{{ hawkerCenters }}" class="list-group">
+                <ListView.itemTemplate>
+                    <GridLayout columns="*, auto" class="card">
+                        <StackLayout col="0">
+                            <Label text="{{ name }}" class="font-bold text-lg" />
+                            <Label text="{{ address }}" class="text-gray-600" />
+                            <FlexboxLayout>
+                                <Label text="{{ crowdLevel }}" class="text-sm" />
+                                <Label text=" • " class="text-sm text-gray-400" />
+                                <Label text="{{ distance }}" class="text-sm" />
+                            </FlexboxLayout>
+                        </StackLayout>
+                        <Label col="1" text="{{ rating }}" class="text-lg font-bold text-orange-500" />
+                    </GridLayout>
+                </ListView.itemTemplate>
+            </ListView>
+        </StackLayout>
+    </ScrollView>
+</Page>

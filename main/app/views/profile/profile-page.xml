@@ -1,0 +1,44 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="onNavigatingTo">
+    <ActionBar title="Profile" />
+    
+    <ScrollView>
+        <StackLayout class="p-4">
+            <StackLayout class="card">
+                <Image src="{{ profileImage }}" class="h-24 w-24 rounded-full mx-auto" />
+                <Label text="{{ userName }}" class="text-xl font-bold text-center mt-2" />
+                <Label text="{{ userEmail }}" class="text-gray-600 text-center" />
+            </StackLayout>
+
+            <StackLayout class="card">
+                <Label text="Preferences" class="text-lg font-bold mb-2" />
+                <GridLayout rows="auto, auto, auto" columns="*, auto" class="m-y-2">
+                    <Label row="0" col="0" text="Favorite Cuisine" class="text-gray-600" />
+                    <Label row="0" col="1" text="{{ favoriteCuisine }}" class="font-bold" />
+                    
+                    <Label row="1" col="0" text="Dietary Restrictions" class="text-gray-600" />
+                    <Label row="1" col="1" text="{{ dietaryRestrictions }}" class="font-bold" />
+                    
+                    <Label row="2" col="0" text="Price Range" class="text-gray-600" />
+                    <Label row="2" col="1" text="{{ priceRange }}" class="font-bold" />
+                </GridLayout>
+                <Button text="Edit Preferences" tap="{{ onEditPreferences }}" class="btn-primary" />
+            </StackLayout>
+
+            <StackLayout class="card">
+                <Label text="Statistics" class="text-lg font-bold mb-2" />
+                <GridLayout rows="auto, auto, auto" columns="*, auto">
+                    <Label row="0" col="0" text="Total Visits" class="text-gray-600" />
+                    <Label row="0" col="1" text="{{ totalVisits }}" class="font-bold" />
+                    
+                    <Label row="1" col="0" text="Reviews Given" class="text-gray-600" />
+                    <Label row="1" col="1" text="{{ reviewsGiven }}" class="font-bold" />
+                    
+                    <Label row="2" col="0" text="Loyalty Points" class="text-gray-600" />
+                    <Label row="2" col="1" text="{{ loyaltyPoints }}" class="font-bold text-orange-500" />
+                </GridLayout>
+            </StackLayout>
+
+            <Button text="Sign Out" tap="{{ onSignOut }}" class="btn-primary m-t-4" />
+        </StackLayout>
+    </ScrollView>
+</Page>
