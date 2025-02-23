@@ -1,6 +1,5 @@
 # LAB 2 DELIVERABLES
 
-- Complete Use Case diagram
 - Use Case descriptions
 - Class diagram of entity classes
 - Key boundary classes and control classes
