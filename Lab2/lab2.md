@@ -4,4 +4,5 @@
 - Class diagram of entity classes
 - Key boundary classes and control classes
 - Sequence diagrams of some use cases
-  Initial Dialog map
+- Initial Dialog map
+- Complete Use Case Diagram
