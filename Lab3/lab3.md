@@ -6,4 +6,4 @@ DELIVERABLES
 - Sequence diagrams
 - Dialog map
 - System architecture
-- application skeleton
+- Application skeleton
