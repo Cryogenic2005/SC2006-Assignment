@@ -1,0 +1,212 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { SearchBar, Button } from 'react-native-elements';
+import { getHawkers, getCrowdLevels } from '../store/slices/hawkerSlice';
+import { getUserPreferences } from '../store/slices/preferencesSlice';
+import { getRecommendations } from '../services/recommendationService';
+import HawkerCard from '../components/HawkerCard';
+
+const HawkersScreen = ({ navigation }) => {
+  const [search, setSearch] = useState('');
+  const [filteredHawkers, setFilteredHawkers] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isRecommending, setIsRecommending] = useState(false);
+  
+  const dispatch = useDispatch();
+  const { hawkers, crowdLevels, loading } = useSelector(state => state.hawkers);
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const preferences = useSelector(state => state.preferences);
+  const { orders } = useSelector(state => state.orders);
+  
+  useEffect(() => {
+    loadData();
+  }, []);
+  
+  useEffect(() => {
+    if (hawkers.length > 0) {
+      filterHawkers();
+    }
+  }, [hawkers, search]);
+  
+  const loadData = async () => {
+    dispatch(getHawkers());
+    dispatch(getCrowdLevels());
+    
+    if (isAuthenticated) {
+      dispatch(getUserPreferences());
+    }
+  };
+  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+  
+  const filterHawkers = () => {
+    if (search) {
+      const filtered = hawkers.filter(hawker => 
+        hawker.name.toLowerCase().includes(search.toLowerCase()) ||
+        hawker.address.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredHawkers(filtered);
+    } else {
+      setFilteredHawkers(hawkers);
+    }
+  };
+  
+  const getPersonalizedRecommendations = async () => {
+    setIsRecommending(true);
+    
+    try {
+      const recommendations = await getRecommendations(
+        hawkers,
+        isAuthenticated ? preferences : null,
+        isAuthenticated ? orders : [],
+        crowdLevels
+      );
+      
+      setFilteredHawkers(recommendations);
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+    } finally {
+      setIsRecommending(false);
+    }
+  };
+  
+  const renderHawkerCard = ({ item }) => {
+    return (
+      <HawkerCard
+        hawker={item}
+        crowdLevel={crowdLevels[item._id]?.level || 'Unknown'}
+        distance={item.distance}
+        onPress={() => navigation.navigate('HawkerDetail', { 
+          hawkerId: item._id,
+          hawkerName: item.name 
+        })}
+      />
+    );
+  };
+  
+  return (
+    <View style={styles.container}>
+      <SearchBar
+        placeholder="Search hawker centers..."
+        onChangeText={setSearch}
+        value={search}
+        containerStyle={styles.searchContainer}
+        inputContainerStyle={styles.searchInputContainer}
+        lightTheme
+        round
+      />
+      
+      <View style={styles.filterContainer}>
+        <Button
+          title="Recommend For Me"
+          type="clear"
+          titleStyle={{ color: '#e67e22' }}
+          loading={isRecommending}
+          onPress={getPersonalizedRecommendations}
+          icon={{
+            name: 'thumbs-up',
+            type: 'font-awesome',
+            size: 15,
+            color: '#e67e22',
+          }}
+          iconRight
+        />
+        
+        <Button
+          title="Filter"
+          type="clear"
+          titleStyle={{ color: '#3498db' }}
+          onPress={() => navigation.navigate('FilterScreen')}
+          icon={{
+            name: 'filter',
+            type: 'font-awesome',
+            size: 15,
+            color: '#3498db',
+          }}
+          iconRight
+        />
+      </View>
+      
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#e67e22" />
+          <Text style={styles.loadingText}>Loading hawker centers...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredHawkers}
+          renderItem={renderHawkerCard}
+          keyExtractor={item => item._id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No hawker centers found. Try a different search term or refresh the list.
+              </Text>
+              <Button
+                title="Refresh"
+                onPress={onRefresh}
+                buttonStyle={styles.refreshButton}
+              />
+            </View>
+          }
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f8f8'
+  },
+  searchContainer: {
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    paddingHorizontal: 10,
+    marginVertical: 5
+  },
+  searchInputContainer: {
+    backgroundColor: '#fff',
+    height: 40
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    marginBottom: 10
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#7f8c8d'
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center'
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#7f8c8d'
+  },
+  refreshButton: {
+    backgroundColor: '#e67e22',
+    paddingHorizontal: 30
+  }
+});
+
+export default HawkersScreen;
