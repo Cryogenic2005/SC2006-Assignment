@@ -39,7 +39,7 @@ const HawkersStack = () => {
     >
       <Stack.Screen 
         name="Hawkers" 
-        component={HawkersScreen} 
+        component={HawkerScreen} 
         options={{ title: 'Hawker Centers' }}
       />
       <Stack.Screen 
