@@ -59,8 +59,10 @@
    ```
 
 6. A QR code will appear in the terminal or browser. Use the **Expo Go** app on your phone to scan the QR code.
+   
+8. Ensure that your phone and laptop are connected to the same wifi network.
 
-7. The app will launch on your phone.
+9. The app will launch on your phone.
 
 ---
 
