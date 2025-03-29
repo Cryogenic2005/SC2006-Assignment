@@ -9,7 +9,7 @@ import {
   Alert,
   Image
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';r
+import { Picker } from '@react-native-picker/picker';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { register, reset } from '../../store/slices/authSlice';
