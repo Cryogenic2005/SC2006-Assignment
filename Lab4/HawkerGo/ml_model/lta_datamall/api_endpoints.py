@@ -9,6 +9,7 @@ class LTADataMallEndpoints(Enum):
     
     BUS_ARRIVAL = "v3/BusArrival"
     '''Returns real-time bus arrival information for bus services at a queried bus stop.
+    Ignores `LTADataMallClient.fetch()` *amount* parameter.
     
     Parameters: BusStopCode, [ServiceNo]'''
     
@@ -54,11 +55,13 @@ class LTADataMallEndpoints(Enum):
     
     TAXI_STANDS = "TaxiStands"
     '''Returns detailed information of Taxi stands, such as location and whether is it barrier free.
+    Ignores `LTADataMallClient.fetch()` *amount* parameter.
     
     Parameters: None'''
     
     TRAIN_SERVICE_ALERTS = "TrainServiceAlerts"
     '''Returns detailed information on train service unavailability during scheduled operating hours.
+    Ignores `LTADataMallClient.fetch()` *amount* parameter.
     
     Parameters: None'''
     
