@@ -1,6 +1,7 @@
 """ Contains the GooglePlacesAPIClient class responsible for making requests to the Google Places API. """
 
 import requests
+import warnings
 
 class GooglePlacesAPIClient:
     # Only include the following fields in the response by default.
@@ -34,6 +35,7 @@ class GooglePlacesAPIClient:
             query (str): The query to search for.
             count (int): The max number of places to return. Note the number of API calls
                 made is equal to the number of places returned divided by 20, rounded up.
+                To avoid making multiple API calls, count is restricted to a max of 2000 (100 API calls).
             search_mask (str): The fields to include in the response.
                 Recommended to use the default value for performance and cost reasons.
                 Refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/text-search#fieldmask) for more info.
@@ -42,6 +44,11 @@ class GooglePlacesAPIClient:
             dict: The list of places and their details. 
                 Only includes the fields specified in the search_mask.
         """
+        
+        if count > 2000:
+            raise ValueError("Parameter 'count' cannot be greater than 2000. "
+                             "This is to avoid making too many API calls (over 100)."
+                             "Are you sure you need to retrieve that many places?")
         
         if count > 20:
             # If the count is greater than 20, we need to include the nextPageToken
@@ -59,6 +66,8 @@ class GooglePlacesAPIClient:
         }
         body = { "textQuery": query }
         
+        request_count = 0 # Number of API calls made, used to limit the number of calls
+        
         retrieved_places = []
         retrieved_count = 0
         
@@ -71,6 +80,18 @@ class GooglePlacesAPIClient:
             body["pageSize"] = min(count - retrieved_count, 20)
             
             response = requests.post(uri, headers=headers, json=body)
+            
+            # Increment the request count, then check if we have made too many calls
+            # This should not happen as we have set a limit on the count parameter above
+            # But just in case, we have this check here.
+            request_count += 1
+            if request_count > 100:
+                warnings.warn(
+                    "Exceeded max number of API calls. "
+                    "This should not happen as we have set a limit on the count parameter."
+                    "Please check the code for any errors.",
+                    RuntimeWarning)
+                break
         
             if response.status_code != 200:
                 raise Exception(f"Request failed with status code {response.status_code}: {response.text}")
