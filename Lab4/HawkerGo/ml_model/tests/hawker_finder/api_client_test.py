@@ -12,7 +12,7 @@ class TestGooglePlacesAPIClient(unittest.TestCase):
     
     def test_simple_text_query(self):
         client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
-        response = client.requestTextSearch(
+        response, _ = client.requestTextSearch(
             "Hall of Residences, " +
             "Nanyang Technological University, " +
             "Singapore")
@@ -32,7 +32,7 @@ class TestGooglePlacesAPIClient(unittest.TestCase):
         
     def test_multi_text_query(self):
         client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
-        response = client.requestTextSearch("Hawker Centre, Singapore",
+        response, _ = client.requestTextSearch("Hawker Centre, Singapore",
                                             count=23,
                                             search_mask="places.id")
         
