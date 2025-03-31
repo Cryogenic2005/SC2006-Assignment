@@ -43,7 +43,7 @@
 3. Navigate to the frontend folder:
 
    ```bash
-   cd Lab4/HawkerGo/hawkergo-expo
+   cd Lab4/HawkerGo/client
    ```
 
 4. Install frontend dependencies:
@@ -59,10 +59,9 @@
    ```
 
 6. A QR code will appear in the terminal or browser. Use the **Expo Go** app on your phone to scan the QR code.
-   
-8. Ensure that your phone and laptop are connected to the same wifi network.
+7. Ensure that your phone and laptop are connected to the same wifi network.
 
-9. The app will launch on your phone.
+8. The app will launch on your phone.
 
 ---
 
