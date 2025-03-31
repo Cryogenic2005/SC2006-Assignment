@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 
 const LoyaltyScreen = ({ navigation }) => {
   const [loyaltyData, setLoyaltyData] = useState([]);

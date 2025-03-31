@@ -1,7 +1,7 @@
 // store/slices/orderSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { API_URL } from '../../constants';
+import { API_URL } from '../../constants/constants';
 
 // Get user orders
 export const getUserOrders = createAsyncThunk(

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react
 import { useSelector } from 'react-redux';
 import { Card, Button, Divider, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 
 const OrderScreen = ({ route, navigation }) => {
   const [items, setItems] = useState([]);
