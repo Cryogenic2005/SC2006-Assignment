@@ -43,16 +43,22 @@ afterAll(async () => {
 
 describe('Auth Routes', () => {
   it('POST /register - should create a new user', async () => {
+    const uniqueEmail = `testuser_${Date.now()}@example.com`;
+
     const res = await request(app).post('/api/auth/register').send({
       name: 'New User',
-      email: 'newuser@gmail.com',
+      email: uniqueEmail,
       password: 'newpassword',
       userType: 'customer',
     });
 
+    if (res.statusCode !== 200) {
+      console.log('Register response body:', res.body);
+    }
+
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('token');
-    expect(res.body.user.email.toLowerCase()).toBe('newuser@gmail.com');
+    expect(res.body.user.email.toLowerCase()).toBe(uniqueEmail.toLowerCase());
   });
 
   it('POST /login - should login existing user', async () => {
