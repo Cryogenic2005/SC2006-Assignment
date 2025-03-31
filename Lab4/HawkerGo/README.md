@@ -69,3 +69,33 @@
 
 - After making changes to a file, return to the Expo terminal.
 - Press `r` to refresh the app on your phone and reflect the changes.
+
+# Running Backend Tests
+
+## Instructions
+
+1. **Navigate to the tests directory**  
+   In your terminal, move into the `tests` directory:
+
+   ```bash
+   cd Lab4/HawkerGo/server/tests
+   ```
+
+2. **Run the test suite**  
+   Execute the following command:
+
+   ```bash
+   npm test
+   ```
+
+3. **Check the logs**  
+   Review the console output to see:
+   - Which tests passed
+   - Which tests failed
+   - Any related error messages or stack traces
+
+## Notes
+
+- Similar to the backend setup, ensure your `.env` file exists in the `server` directory and contains valid values (e.g. `JWT_SECRET`, `MONGO_URI`, etc.).
+- Tests use `Jest` and `Supertest` to simulate API calls and verify behavior.
+hi
