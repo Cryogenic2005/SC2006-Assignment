@@ -17,7 +17,7 @@ class HawkerInfoFinder:
     
     def findHawkerCenters(self,
                           amount: int = 20,
-                          pageToken: str = None) -> tuple[list[HawkerInfo], str|None]:
+                          page_token: str = None) -> tuple[list[HawkerInfo], str|None]:
         """Finds hawker centers in Singapore.
 
         Args:
@@ -35,12 +35,12 @@ class HawkerInfoFinder:
         # Get the list of hawker centers
         hawker_centers, nextPageToken = self.client.requestTextSearch("Hawker Centers, Singapore",
                                                                       count=amount,
-                                                                      pageToken=pageToken)
+                                                                      page_token=page_token)
         
         hawker_infos = [
             HawkerInfo(hawker_center["id"],
                        hawker_center["location"]["longitude"],
-                       hawker_center["geometry"]["latitude"],
+                       hawker_center["location"]["latitude"],
                        hawker_center["displayName"]["text"])        
             for hawker_center in hawker_centers
         ]
