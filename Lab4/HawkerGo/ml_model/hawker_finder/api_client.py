@@ -139,7 +139,7 @@ class GooglePlacesAPIClient:
             longitude (float): The longitude of the location to search around.
             radius (float): The radius to search within.
             types (list[str]): The types of places to search for. For a list of
-                supported types, refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/place-types)
+                supported types, refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/place-types#table-a)
             search_mask (str, optional): The fields to include in the response.
                 Recommended to use the default value for performance and cost reasons.
                 Refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/nearby-search#fieldmask) for more info.
