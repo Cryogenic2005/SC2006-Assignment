@@ -13,8 +13,8 @@ class TestGooglePlacesAPIClient(unittest.TestCase):
     def test_simple_text_query(self):
         client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
         response, _ = client.requestTextSearch(
-            "Hall of Residences, " +
-            "Nanyang Technological University, " +
+            "Hall of Residences, "
+            "Nanyang Technological University, "
             "Singapore")
         
         self.assertIsNotNone(response)
@@ -33,14 +33,48 @@ class TestGooglePlacesAPIClient(unittest.TestCase):
     def test_multi_text_query(self):
         client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
         response, _ = client.requestTextSearch("Hawker Centre, Singapore",
-                                            count=23,
-                                            search_mask="places.id")
+                                               count=23,
+                                               search_mask="places.id")
         
         self.assertIsNotNone(response)
         
         # Check that the response contains the expected number of places
         self.assertEqual(len(response), 23)
         
+    def testFollowupSearch(self):
+        client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
+        
+        response1, next_page_token = \
+            client.requestTextSearch("Hall of Residences, NTU, Singapore",
+                                     count=3,
+                                     search_mask="places.id")
+        
+        self.assertIsNotNone(next_page_token)
+        
+        response2, next_page_token = \
+            client.requestTextSearch("Hall of Residences, NTU, Singapore",
+                                     count=3,
+                                     page_token=next_page_token,
+                                     search_mask="places.id")
+        
+        for place in response1:
+            self.assertNotIn(place["id"], [item["id"] for item in response2])
+        
+        for place in response2:
+            self.assertNotIn(place["id"], [item["id"] for item in response1])
+            
+        # This time, we will request all the results at once
+        #   and check that the results are the same as before.
+        response, _ = client.requestTextSearch("Hall of Residences, NTU, Singapore",
+                                               count=6,
+                                               search_mask="places.id")
+        
+        self.assertSetEqual(
+            set([place["id"] for place in response]),
+            set([place["id"] for place in response1] + [place["id"] for place in response2])
+        )
+                                 
+            
     def test_nearby_search(self):
         client = GooglePlacesAPIClient(api_key=os.getenv("GOOGLE_PLACES_API_KEY"))
         response = client.requestNearbySearch( # Banyan Hall
