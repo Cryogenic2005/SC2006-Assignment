@@ -28,35 +28,40 @@ class GooglePlacesAPIClient:
     def requestTextSearch(self,
                           query: str,
                           count: int = 20,
-                          search_mask: str = _TEXT_SEARCH_MASKS_DEFAULT) -> list[dict]:
+                          page_token: str = None,
+                          search_mask: str = _TEXT_SEARCH_MASKS_DEFAULT) -> tuple[list[dict], str|None]:
         """Makes a request to the Google Places **Text Search (New)** API.
 
         Args:
             query (str): The query to search for.
-            count (int): The max number of places to return. Note the number of API calls
+            count (int, optional): The max number of places to return. Note the number of API calls
                 made is equal to the number of places returned divided by 20, rounded up.
                 To avoid making multiple API calls, count is restricted to a max of 2000 (100 API calls).
-            search_mask (str): The fields to include in the response.
+            page_token (str, optional): The token to get the page of results. If provided,
+                the API will return the page of results based on the token. Used for continuing
+                a previous search. Default is None, which means the first page of results.
+            search_mask (str, optional): The fields to include in the response.
                 Recommended to use the default value for performance and cost reasons.
                 Refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/text-search#fieldmask) for more info.
 
         Returns:
             dict: The list of places and their details. 
                 Only includes the fields specified in the search_mask.
+            str|None: The next page token to get the next page of results.
+                If None, there are no more results to retrieve.
         """
         
+        # Ensure count is not greater than 2000 to avoid making too many API calls
         if count > 2000:
             raise ValueError("Parameter 'count' cannot be greater than 2000. "
                              "This is to avoid making too many API calls (over 100)."
                              "Are you sure you need to retrieve that many places?")
         
-        if count > 20:
-            # If the count is greater than 20, we need to include the nextPageToken
-            # field in the response to get the next page of results
-            # This is because the API only returns max 20 results per page
-            if "nextPageToken" not in search_mask:
-                search_mask += f",nextPageToken"
+        # Ensure nextPageToken is included in the search mask
+        if "nextPageToken" not in search_mask:
+            search_mask += f",nextPageToken"
         
+        # Define the URI and headers for the request
         uri = "https://places.googleapis.com/v1/places:searchText"
         headers = {
             "Content-Type": "application/json",
@@ -64,7 +69,10 @@ class GooglePlacesAPIClient:
             # Only include the following fields in the response
             "X-Goog-FieldMask": search_mask
         }
+        
         body = { "textQuery": query }
+        if page_token: # If a page token is provided, set it in the body
+            body["pageToken"] = page_token
         
         request_count = 0 # Number of API calls made, used to limit the number of calls
         
@@ -116,7 +124,7 @@ class GooglePlacesAPIClient:
             # Get the next page of results by setting the pageToken field in the body
             body["pageToken"] = response_json["nextPageToken"]
         
-        return retrieved_places
+        return retrieved_places, response_json.get("nextPageToken", None)
 
     def requestNearbySearch(self,
                             latitude: float,
@@ -132,7 +140,7 @@ class GooglePlacesAPIClient:
             radius (float): The radius to search within.
             types (list[str]): The types of places to search for. For a list of
                 supported types, refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/place-types)
-            search_mask (str): The fields to include in the response.
+            search_mask (str, optional): The fields to include in the response.
                 Recommended to use the default value for performance and cost reasons.
                 Refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/nearby-search#fieldmask) for more info.
 
