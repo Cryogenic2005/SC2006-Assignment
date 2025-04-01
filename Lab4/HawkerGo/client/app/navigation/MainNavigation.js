@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Icon } from 'react-native-elements';
 
 // Screens
-import HawkersScreen from '../screens/HawkersScreen';
+import HawkerScreen from '../screens/HawkerScreen';
 import HawkerDetailScreen from '../screens/HawkerDetailScreen';
 import StallDetailScreen from '../screens/StallDetailScreen';
 import OrderScreen from '../screens/OrderScreen';
@@ -39,7 +39,7 @@ const HawkersStack = () => {
     >
       <Stack.Screen 
         name="Hawkers" 
-        component={HawkersScreen} 
+        component={HawkerScreen} 
         options={{ title: 'Hawker Centers' }}
       />
       <Stack.Screen 

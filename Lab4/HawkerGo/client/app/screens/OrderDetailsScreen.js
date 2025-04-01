@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Divider, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 import moment from 'moment';
 
 const OrderDetailsScreen = ({ route, navigation }) => {

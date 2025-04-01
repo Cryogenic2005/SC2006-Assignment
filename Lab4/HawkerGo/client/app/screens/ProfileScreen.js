@@ -6,7 +6,7 @@ import { logout } from '../store/slices/authSlice';
 import { clearPreferences } from '../store/slices/preferencesSlice';
 import { clearOrders } from '../store/slices/orderSlice';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 
 const ProfileScreen = ({ navigation }) => {
   const [userStats, setUserStats] = useState({

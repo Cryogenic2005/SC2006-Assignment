@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Switch } fro
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Overlay, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 
 const QueueManagementScreen = ({ route, navigation }) => {
   const [queue, setQueue] = useState(null);

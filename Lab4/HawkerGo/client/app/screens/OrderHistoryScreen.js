@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } fr
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 import moment from 'moment';
 
 const OrderHistoryScreen = ({ navigation }) => {

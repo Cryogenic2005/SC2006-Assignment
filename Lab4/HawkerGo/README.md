@@ -43,7 +43,7 @@
 3. Navigate to the frontend folder:
 
    ```bash
-   cd Lab4/HawkerGo/hawkergo-expo
+   cd Lab4/HawkerGo/client
    ```
 
 4. Install frontend dependencies:
@@ -59,10 +59,9 @@
    ```
 
 6. A QR code will appear in the terminal or browser. Use the **Expo Go** app on your phone to scan the QR code.
-   
-8. Ensure that your phone and laptop are connected to the same wifi network.
+7. Ensure that your phone and laptop are connected to the same wifi network.
 
-9. The app will launch on your phone.
+8. The app will launch on your phone.
 
 ---
 
@@ -70,3 +69,32 @@
 
 - After making changes to a file, return to the Expo terminal.
 - Press `r` to refresh the app on your phone and reflect the changes.
+
+# Running Backend Tests
+
+## Instructions
+
+1. **Navigate to the tests directory**  
+   In your terminal, move into the `tests` directory:
+
+   ```bash
+   cd Lab4/HawkerGo/server/tests
+   ```
+
+2. **Run the test suite**  
+   Execute the following command:
+
+   ```bash
+   npm test
+   ```
+
+3. **Check the logs**  
+   Review the console output to see:
+   - Which tests passed
+   - Which tests failed
+   - Any related error messages or stack traces
+
+## Notes
+
+- Similar to the backend setup, ensure your `.env` file exists in the `server` directory and contains valid values (e.g. `JWT_SECRET`, `MONGO_URI`, etc.).
+- Tests use `Jest` and `Supertest` to simulate API calls and verify behavior.

@@ -36,6 +36,7 @@ const initialState = {
   token: null,
   isLoading: false,
   isSuccess: false,
+  isAuthenticated: false,
   isError: false,
   errorMessage: '',
 };
@@ -60,6 +61,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload.user;
+        state.isAuthenticated = true;
         state.token = action.payload.token;
       })
       .addCase(login.rejected, (state, action) => {

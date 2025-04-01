@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Card, Button, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_URL } from '../constants/constants';
 
 const CrowdReportScreen = ({ route, navigation }) => {
   const [currentCrowd, setCurrentCrowd] = useState('Unknown');
