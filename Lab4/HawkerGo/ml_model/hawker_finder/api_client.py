@@ -4,9 +4,6 @@ import requests
 import warnings
 
 class GooglePlacesAPIClient:
-    # Only include the following fields in the response by default.
-    # This is to reduce the amount of data returned by the API
-    # which can help improve performance and reduce costs
     _TEXT_SEARCH_MASKS_DEFAULT = ",".join([
         "places.id",
         "places.formattedAddress",
@@ -30,7 +27,7 @@ class GooglePlacesAPIClient:
                           count: int = 20,
                           page_token: str = None,
                           search_mask: str = _TEXT_SEARCH_MASKS_DEFAULT) -> tuple[list[dict], str|None]:
-        """Makes a request to the Google Places **Text Search (New)** API.
+        """Makes a request to the Google Places **Text Search** API.
 
         Args:
             query (str): The query to search for.
@@ -153,7 +150,6 @@ class GooglePlacesAPIClient:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Only include the following fields in the response
             "X-Goog-FieldMask": search_mask
         }
         body = {
@@ -196,7 +192,6 @@ class GooglePlacesAPIClient:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Only include the following fields in the response
             "X-Goog-FieldMask": search_mask
         }
         
