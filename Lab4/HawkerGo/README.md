@@ -98,3 +98,31 @@
 
 - Similar to the backend setup, ensure your `.env` file exists in the `server` directory and contains valid values (e.g. `JWT_SECRET`, `MONGO_URI`, etc.).
 - Tests use `Jest` and `Supertest` to simulate API calls and verify behavior.
+
+# Running Frontend Tests
+
+## Instructions
+
+1. **Navigate to the client/tests directory**  
+   In your terminal, move into the `__tests__` directory:
+
+   ```bash
+   cd Lab4/HawkerGo/client/__tests__
+   ```
+
+2. **Run the test suite**  
+   Execute the following command:
+
+   ```bash
+   npm test
+   ```
+
+3. **Check the logs**  
+   Review the console output to see:
+   - Which tests passed
+   - Which tests failed
+   - Any related error messages or stack traces
+
+## Notes
+
+- Tests that fail for screens can be ignored for now.
