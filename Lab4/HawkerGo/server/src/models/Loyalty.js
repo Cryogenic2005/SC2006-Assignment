@@ -1,4 +1,3 @@
-// models/Loyalty.js
 const mongoose = require('mongoose');
 
 const LoyaltySchema = new mongoose.Schema({
