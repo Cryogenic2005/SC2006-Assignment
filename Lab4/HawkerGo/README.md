@@ -128,4 +128,3 @@
 ## Notes
 
 - Tests that fail for screens can be ignored for now.
-  > > > > > > > origin/featureRazan
