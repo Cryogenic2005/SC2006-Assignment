@@ -3,7 +3,7 @@
 import reducer, {
   getHawkers,
   getCrowdLevels
-} from '../../app/store/slices/hawkerslice';
+} from '../../app/store/slices/hawkerSlice';
 import axios from 'axios';
 import configureStore from 'redux-mock-store';
 import { thunk } from 'redux-thunk';

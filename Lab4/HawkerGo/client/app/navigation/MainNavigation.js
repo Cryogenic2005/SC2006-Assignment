@@ -126,6 +126,12 @@ const ProfileStack = () => {
         component={LoyaltyScreen} 
         options={{ title: 'Loyalty Rewards' }}
       />
+      <Stack.Screen 
+        name="FilterScreen" 
+        component={FilterScreen} 
+        options={{ title: 'Preferences' }} 
+/>
+
     </Stack.Navigator>
   );
 };

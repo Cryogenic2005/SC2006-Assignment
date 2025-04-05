@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } fr
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants/constants';
+import { API_BASE_URL } from '../constants/api';
 import moment from 'moment';
 
 const OrderHistoryScreen = ({ navigation }) => {
@@ -22,7 +22,7 @@ const OrderHistoryScreen = ({ navigation }) => {
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/orders/user`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/orders/user`, config);
       setOrders(res.data);
       setLoading(false);
       setRefreshing(false);
@@ -81,7 +81,7 @@ const OrderHistoryScreen = ({ navigation }) => {
           <Text style={styles.emptyText}>You haven't placed any orders yet</Text>
           <Button
             title="Browse Hawker Centers"
-            onPress={() => navigation.navigate('Hawkers')}
+            onPress={() => navigation.navigate('HawkersTab')}
             buttonStyle={styles.browseButton}
           />
         </View>

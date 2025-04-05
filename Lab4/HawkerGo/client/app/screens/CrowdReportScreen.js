@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Card, Button, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants/constants';
+import { API_BASE_URL } from '../constants/api';
 
 const CrowdReportScreen = ({ route, navigation }) => {
   const [currentCrowd, setCurrentCrowd] = useState('Unknown');
@@ -24,7 +24,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
   
   const fetchCrowdData = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/crowds/${hawkerId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/crowds/${hawkerId}`);
       setCurrentCrowd(res.data.level);
       
       // Check if user has reported recently
@@ -36,7 +36,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
         };
         
         const userReportRes = await axios.get(
-          `${API_URL}/api/crowds/user-status/${hawkerId}`,
+          `${API_BASE_URL}/api/crowds/user-status/${hawkerId}`,
           config
         );
         
@@ -86,7 +86,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
         level: selectedLevel
       };
       
-      await axios.post(`${API_URL}/api/crowds`, body, config);
+      await axios.post(`${API_BASE_URL}/api/crowds`, body, config);
       
       setSubmitting(false);
       setSelectedLevel(null);

@@ -15,12 +15,12 @@ try {
 
   if (debuggerHost) {
     const ip = debuggerHost.split(':')[0];
-    API_BASE_URL = `http://${ip}:3000/api`;
+    API_BASE_URL = `http://${ip}:3000`;
   } else {
-    API_BASE_URL = 'http://localhost:3000/api'; // fallback
+    API_BASE_URL = 'http://localhost:3000'; // fallback
   }
 } catch (error) {
-  API_BASE_URL = 'http://localhost:3000/api'; // fallback
+  API_BASE_URL = 'http://localhost:3000'; // fallback
 }
 
 console.log('📡 API_BASE_URL (your backend (server) URL):', API_BASE_URL);
