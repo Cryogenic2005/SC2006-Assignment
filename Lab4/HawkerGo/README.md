@@ -99,6 +99,8 @@
 - Similar to the backend setup, ensure your `.env` file exists in the `server` directory and contains valid values (e.g. `JWT_SECRET`, `MONGO_URI`, etc.).
 - Tests use `Jest` and `Supertest` to simulate API calls and verify behavior.
 
+=======
+
 # Running Frontend Tests
 
 ## Instructions

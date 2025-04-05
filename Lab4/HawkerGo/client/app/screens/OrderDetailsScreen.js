@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Divider, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants/constants';
+import { API_BASE_URL } from '../constants/api';
 import moment from 'moment';
 
 const OrderDetailsScreen = ({ route, navigation }) => {
@@ -24,7 +24,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           }
         };
         
-        const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
+        const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
         setOrder(res.data);
         setLoading(false);
         
@@ -63,7 +63,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         }
       };
       
-      await axios.put(`${API_URL}/api/orders/${orderId}/cancel`, {}, config);
+      await axios.put(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {}, config);
       
       // Update local state
       setOrder({ ...order, status: 'cancelled' });

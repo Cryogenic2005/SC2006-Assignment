@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 
 const login = async (email, password) => {
-  const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+  const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
     email,
     password,
   });
@@ -11,7 +11,7 @@ const login = async (email, password) => {
 };
 
 const register = async (name, email, password, userType) => {
-  const response = await axios.post(`${API_BASE_URL}/auth/register`, {
+  const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
     name,
     email,
     password,
@@ -21,7 +21,7 @@ const register = async (name, email, password, userType) => {
 };
 
 const socialLogin = async (provider, token) => {
-  const response = await axios.post(`${API_BASE_URL}/auth/social-login`, {
+  const response = await axios.post(`${API_BASE_URL}/api/auth/social-login`, {
     provider,
     token,
   });
