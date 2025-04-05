@@ -8,7 +8,7 @@ import {
   getNearbyBusStops,
   getBusArrivals,
   calculateRoute
-} from '../../app/store/services/locationService';
+} from '../../app/services/locationService';
 import { LTA_API_KEY } from '../../app/constants/constants';
 
 jest.mock('expo-location');

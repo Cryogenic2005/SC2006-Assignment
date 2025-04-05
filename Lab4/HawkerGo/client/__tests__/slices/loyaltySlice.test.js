@@ -4,7 +4,7 @@ import reducer, {
 } from '../../app/store/slices/loyaltySlice';
 import axios from 'axios';
 import configureStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
+import { thunk } from 'redux-thunk';
 import MockAdapter from 'axios-mock-adapter';
 import { API_BASE_URL } from '../../app/constants/api';
 

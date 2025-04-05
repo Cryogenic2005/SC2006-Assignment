@@ -1,18 +1,19 @@
+import configureStore from 'redux-mock-store';
+import { thunk } from 'redux-thunk';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+
 import reducer, {
   getStallById,
   getStallMenu,
   addMenuItem,
   updateMenuItem,
-  deleteMenuItem
+  deleteMenuItem,
 } from '../../app/store/slices/stallSlice';
-
-import axios from 'axios';
-import configureStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
-import MockAdapter from 'axios-mock-adapter';
 import { API_BASE_URL } from '../../app/constants/api';
 
-const mockStore = configureStore([thunk]);
+const middlewares = [thunk];
+const mockStore = configureStore(middlewares);
 const axiosMock = new MockAdapter(axios);
 
 describe('stallSlice', () => {
@@ -23,7 +24,7 @@ describe('stallSlice', () => {
     currentStall: null,
     menusByStall: {},
     loading: false,
-    error: null
+    error: null,
   };
 
   afterEach(() => {
@@ -31,7 +32,7 @@ describe('stallSlice', () => {
   });
 
   it('should return initial state', () => {
-    expect(reducer(undefined, { type: '' })).toEqual(initialState);
+    expect(reducer(undefined, { type: undefined })).toEqual(initialState);
   });
 
   it('should handle getStallById fulfilled', async () => {
@@ -41,9 +42,10 @@ describe('stallSlice', () => {
     axiosMock.onGet(`${API_BASE_URL}/api/stalls/${stallId}`).reply(200, mockStall);
 
     const store = mockStore({});
-    await store.dispatch(getStallById(stallId));
 
+    await store.dispatch(getStallById(stallId));
     const actions = store.getActions();
+
     expect(actions[1].type).toBe(getStallById.fulfilled.type);
     expect(actions[1].payload).toEqual(mockStall);
   });
@@ -55,8 +57,8 @@ describe('stallSlice', () => {
 
     const store = mockStore({});
     await store.dispatch(getStallById(stallId));
-
     const actions = store.getActions();
+
     expect(actions[1].type).toBe(getStallById.rejected.type);
     expect(actions[1].payload).toBe('Error fetching stall');
   });
@@ -69,8 +71,8 @@ describe('stallSlice', () => {
 
     const store = mockStore({});
     await store.dispatch(getStallMenu(stallId));
-
     const actions = store.getActions();
+
     expect(actions[1].type).toBe(getStallMenu.fulfilled.type);
     expect(actions[1].payload).toEqual({ stallId, menu });
   });
@@ -86,8 +88,8 @@ describe('stallSlice', () => {
 
     const store = mockStore(authState);
     await store.dispatch(addMenuItem({ stallId, itemData }));
-
     const actions = store.getActions();
+
     expect(actions[1].type).toBe(addMenuItem.fulfilled.type);
     expect(actions[1].payload).toEqual({ stallId, item: returnedItem });
   });
@@ -98,14 +100,14 @@ describe('stallSlice', () => {
     const initialStateWithMenu = {
       ...initialState,
       menusByStall: {
-        [stallId]: [{ _id: itemId, name: 'Old Name' }]
-      }
+        [stallId]: [{ _id: itemId, name: 'Old Name' }],
+      },
     };
     const updatedItem = { _id: itemId, name: 'Updated Name' };
 
     const action = {
       type: updateMenuItem.fulfilled.type,
-      payload: { stallId, itemId, item: updatedItem }
+      payload: { stallId, itemId, item: updatedItem },
     };
 
     const state = reducer(initialStateWithMenu, action);
@@ -115,20 +117,19 @@ describe('stallSlice', () => {
   it('should handle deleteMenuItem fulfilled', () => {
     const stallId = 'stall1';
     const itemId = 'item1';
-
     const initialStateWithMenu = {
       ...initialState,
       menusByStall: {
         [stallId]: [
           { _id: itemId, name: 'To be deleted' },
-          { _id: 'item2', name: 'Keep me' }
-        ]
-      }
+          { _id: 'item2', name: 'Keep me' },
+        ],
+      },
     };
 
     const action = {
       type: deleteMenuItem.fulfilled.type,
-      payload: { stallId, itemId }
+      payload: { stallId, itemId },
     };
 
     const state = reducer(initialStateWithMenu, action);

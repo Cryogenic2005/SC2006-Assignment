@@ -1,7 +1,7 @@
-import { getRecommendations } from '../../app/store/services/recommendationService';
-import * as locationService from '../../app/store/services/locationService';
+import { getRecommendations } from '../../app/services/recommendationService';
+import * as locationService from '../../app/services/locationService';
 
-jest.mock('../../app/store/services/locationService');
+jest.mock('../../app/services/locationService');
 
 describe('getRecommendations', () => {
   const mockLocation = { latitude: 1.3, longitude: 103.8 };
@@ -52,7 +52,7 @@ describe('getRecommendations', () => {
 
   beforeEach(() => {
     locationService.getCurrentLocation.mockResolvedValue(mockLocation);
-    locationService.calculateDistance = jest.requireActual('../../app/store/services/locationService').calculateDistance;
+    locationService.calculateDistance = jest.requireActual('../../app/services/locationService').calculateDistance;
   });
 
   it('returns sorted recommendations by score', async () => {
