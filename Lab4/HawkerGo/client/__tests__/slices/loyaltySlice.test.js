@@ -1,7 +1,7 @@
 import reducer, {
   getUserLoyalty,
   updateLoyalty
-} from '../../app/store/slices/loyaltyslice';
+} from '../../app/store/slices/loyaltySlice';
 import axios from 'axios';
 import configureStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
