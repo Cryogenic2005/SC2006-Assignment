@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react
 import { useSelector } from 'react-redux';
 import { Card, Button, Divider, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_BASE_URL } from '../constants/api';
 
 const OrderScreen = ({ route, navigation }) => {
   const [items, setItems] = useState([]);
@@ -18,11 +18,11 @@ const OrderScreen = ({ route, navigation }) => {
     const fetchStallData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_URL}/api/stalls/${stallId}`);
+        const res = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}`);
         setStall(res.data);
         
         // Get menu items for this stall
-        const menuRes = await axios.get(`${API_URL}/api/stalls/${stallId}/menu`);
+        const menuRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}/menu`);
         setItems(menuRes.data);
         setLoading(false);
       } catch (err) {
@@ -98,7 +98,7 @@ const OrderScreen = ({ route, navigation }) => {
         }
       };
       
-      const res = await axios.post(`${API_URL}/api/orders`, orderData, config);
+      const res = await axios.post(`${API_BASE_URL}/api/orders`, orderData, config);
       
       setLoading(false);
       setCart([]);

@@ -9,9 +9,9 @@ import loyaltyReducer from './slices/loyaltySlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    hawker: hawkerReducer,
+    hawkers: hawkerReducer,
     stall: stallReducer,
-    order: orderReducer,
+    orders: orderReducer,
     queue: queueReducer,
     loyalty: loyaltyReducer,
   },

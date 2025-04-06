@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_BASE_URL } from '../constants/api';
 
 const LoyaltyScreen = ({ navigation }) => {
   const [loyaltyData, setLoyaltyData] = useState([]);
@@ -30,11 +30,11 @@ const LoyaltyScreen = ({ navigation }) => {
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/loyalty`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/loyalty`, config);
       setLoyaltyData(res.data);
       
       // Get available rewards
-      const rewardsRes = await axios.get(`${API_URL}/api/rewards`, config);
+      const rewardsRes = await axios.get(`${API_BASE_URL}/api/rewards`, config);
       setRewards(rewardsRes.data);
       
       setLoading(false);
@@ -60,7 +60,7 @@ const LoyaltyScreen = ({ navigation }) => {
         stallId
       };
       
-      await axios.post(`${API_URL}/api/rewards/redeem`, body, config);
+      await axios.post(`${API_BASE_URL}/api/rewards/redeem`, body, config);
       
       // Refresh loyalty data
       fetchLoyaltyData();

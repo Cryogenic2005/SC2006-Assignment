@@ -11,7 +11,7 @@ const stallRoutes = require('./src/routes/stalls');
 const orderRoutes = require('./src/routes/orders');
 const queueRoutes = require('./src/routes/queues');
 const loyaltyRoutes = require('./src/routes/loyalty');
-const crowdRoutes = require('./src/routes/crowd');
+const crowdRoutes = require('./src/routes/crowds');
 
 // Initialize app
 const app = express();

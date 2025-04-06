@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, Button, Divider, Badge, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_BASE_URL } from '../constants/constants';
 
 const StallDetailScreen = ({ route, navigation }) => {
   const { stallId, stallName } = route.params;
@@ -28,15 +28,15 @@ const StallDetailScreen = ({ route, navigation }) => {
       setLoading(true);
       
       // Get stall details
-      const stallRes = await axios.get(`${API_URL}/api/stalls/${stallId}`);
+      const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}`);
       setStall(stallRes.data);
       
       // Get menu items
-      const menuRes = await axios.get(`${API_URL}/api/stalls/${stallId}/menu`);
+      const menuRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}/menu`);
       setMenuItems(menuRes.data);
       
       // Get queue status
-      const queueRes = await axios.get(`${API_URL}/api/queues/stall/${stallId}`);
+      const queueRes = await axios.get(`${API_BASE_URL}/api/queues/stall/${stallId}`);
       setQueueStatus(queueRes.data);
       
       setLoading(false);

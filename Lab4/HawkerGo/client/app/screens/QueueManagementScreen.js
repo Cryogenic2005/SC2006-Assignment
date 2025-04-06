@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Switch } fro
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Overlay, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_BASE_URL } from '../constants/api';
 
 const QueueManagementScreen = ({ route, navigation }) => {
   const [queue, setQueue] = useState(null);
@@ -36,13 +36,13 @@ const QueueManagementScreen = ({ route, navigation }) => {
       };
       
       // Get queue status
-      const queueRes = await axios.get(`${API_URL}/api/queues/stall/${stallId}`, config);
+      const queueRes = await axios.get(`${API_BASE_URL}/api/queues/stall/${stallId}`, config);
       setQueue(queueRes.data);
       setQueueActive(queueRes.data.status === 'active');
       setWaitTime(queueRes.data.averageWaitTime);
       
       // Get pending orders
-      const ordersRes = await axios.get(`${API_URL}/api/orders/stall/${stallId}`, config);
+      const ordersRes = await axios.get(`${API_BASE_URL}/api/orders/stall/${stallId}`, config);
       setOrders(ordersRes.data);
       
       setLoading(false);
@@ -67,7 +67,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
         averageWaitTime: waitTime
       };
       
-      await axios.put(`${API_URL}/api/queues/stall/${stallId}`, updateData, config);
+      await axios.put(`${API_BASE_URL}/api/queues/stall/${stallId}`, updateData, config);
       
       setIsSettingsVisible(false);
       fetchQueueData();
@@ -95,7 +95,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
                 }
               };
               
-              await axios.put(`${API_URL}/api/queues/stall/${stallId}/reset`, {}, config);
+              await axios.put(`${API_BASE_URL}/api/queues/stall/${stallId}/reset`, {}, config);
               
               fetchQueueData();
               Alert.alert('Success', 'Queue has been reset');
@@ -117,7 +117,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
         }
       };
       
-      await axios.put(`${API_URL}/api/orders/${orderId}/status`, { status }, config);
+      await axios.put(`${API_BASE_URL}/api/orders/${orderId}/status`, { status }, config);
       
       // Update local state
       setOrders(orders.map(order => 

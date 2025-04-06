@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { API_URL } from '../../constants';
+import { API_URL } from '../../constants/api';
 
 // Get all hawker centers
 export const getHawkers = createAsyncThunk(

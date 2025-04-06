@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import axios from 'axios';
-import { LTA_API_KEY } from '../constants';
+import { LTA_API_KEY } from '../constants/constants';
 
 // Check location permissions
 export const checkLocationPermission = async () => {

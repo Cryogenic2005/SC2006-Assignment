@@ -6,7 +6,7 @@ import { logout } from '../store/slices/authSlice';
 import { clearPreferences } from '../store/slices/preferencesSlice';
 import { clearOrders } from '../store/slices/orderSlice';
 import axios from 'axios';
-import { API_URL } from '../constants';
+import { API_BASE_URL } from '../constants/api';
 
 const ProfileScreen = ({ navigation }) => {
   const [userStats, setUserStats] = useState({
@@ -36,7 +36,7 @@ const ProfileScreen = ({ navigation }) => {
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/users/stats`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/users/stats`, config);
       
       setUserStats(res.data);
       setLoading(false);
