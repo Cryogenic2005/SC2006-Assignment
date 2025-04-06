@@ -82,13 +82,15 @@ const RegisterScreen = ({ navigation }) => {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <View style={styles.input}>
+
+        <View style={[styles.input, {height: 120}]}>
           <Picker
             selectedValue={userType}
             onValueChange={(itemValue) => setUserType(itemValue)}
+            itemStyle={{ height: 120 }}
           >
-            <Picker.Item label="Customer" value="customer" />
-            <Picker.Item label="Stall Owner" value="stallOwner" />
+            <Picker.Item label="Customer" value="customer" color='#000'/>
+            <Picker.Item label="Stall Owner" value="stallOwner" color='#000'/>
           </Picker>
         </View>
 
@@ -145,6 +147,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 15,
     marginBottom: 15,
+    height: 50,
   },
   button: {
     backgroundColor: '#e74c3c',
