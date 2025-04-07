@@ -83,11 +83,11 @@ const RegisterScreen = ({ navigation }) => {
           secureTextEntry
         />
 
-        <View style={[styles.input, {height: 120}]}>
+        <View style={[styles.input, {padding: 0, height: 120}]}>
           <Picker
             selectedValue={userType}
             onValueChange={(itemValue) => setUserType(itemValue)}
-            itemStyle={{ height: 120 }}
+            itemStyle={{ height: '100%' }}
           >
             <Picker.Item label="Customer" value="customer" color='#000'/>
             <Picker.Item label="Stall Owner" value="stallOwner" color='#000'/>
