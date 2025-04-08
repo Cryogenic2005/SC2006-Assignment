@@ -4,9 +4,6 @@ import requests
 import warnings
 
 class GooglePlacesAPIClient:
-    # Only include the following fields in the response by default.
-    # This is to reduce the amount of data returned by the API
-    # which can help improve performance and reduce costs
     _TEXT_SEARCH_MASKS_DEFAULT = ",".join([
         "places.id",
         "places.formattedAddress",
@@ -30,7 +27,7 @@ class GooglePlacesAPIClient:
                           count: int = 20,
                           page_token: str = None,
                           search_mask: str = _TEXT_SEARCH_MASKS_DEFAULT) -> tuple[list[dict], str|None]:
-        """Makes a request to the Google Places **Text Search (New)** API.
+        """Makes a request to the Google Places **Text Search** API.
 
         Args:
             query (str): The query to search for.
@@ -131,7 +128,7 @@ class GooglePlacesAPIClient:
                             longitude: float,
                             radius: float,
                             types: list[str],
-                            search_mask: str = _NEARBY_SEARCH_MASKS_DEFAULT) -> dict:
+                            search_mask: str = _NEARBY_SEARCH_MASKS_DEFAULT) -> list[dict]:
         """Makes a request to the Google Places **Nearby Search (New)** API.
 
         Args:
@@ -145,15 +142,14 @@ class GooglePlacesAPIClient:
                 Refer to the [Google Places API documentation](https://developers.google.com/maps/documentation/places/web-service/nearby-search#fieldmask) for more info.
 
         Returns:
-            dict: The JSON response from the API. Returns top 20 results by distance.
+            list[dict]: The list of places from the API. Returns top 20 results by distance.
                 Only includes the fields specified in the search_mask.
         """
-        
+
         uri = "https://places.googleapis.com/v1/places:searchNearby"
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Only include the following fields in the response
             "X-Goog-FieldMask": search_mask
         }
         body = {
@@ -169,13 +165,18 @@ class GooglePlacesAPIClient:
             "includedTypes": types,
             "rankPreference": "DISTANCE"
         }
-        
-        response = requests.post(uri, headers=headers, json=body)
-        
-        if response.status_code != 200:
-            raise Exception(f"Request failed with status code {response.status_code}: {response.text}")
-        
-        return response.json()["places"] if "places" in response.json() else []
+
+        try:
+            response = requests.post(uri, headers=headers, json=body)
+
+            if response.status_code != 200:
+                print(f"Request failed with status code {response.status_code}: {response.text}")
+                return []
+
+            return response.json().get("places", [])
+        except Exception as e:
+            print(f"Error in requestNearbySearch: {e}")
+            return []
     
     def requestPlaceDetails(self,
                             place_id: str,
@@ -196,7 +197,6 @@ class GooglePlacesAPIClient:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Only include the following fields in the response
             "X-Goog-FieldMask": search_mask
         }
         

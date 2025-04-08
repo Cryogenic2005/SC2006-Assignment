@@ -30,6 +30,10 @@ app.use('/api/queues', queueRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/crowd', crowdRoutes);
 
+// Services
+const MLService = require('./src/services/mlService');
+const SchedulerService = require('./src/services/scheduler');
+
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
@@ -50,8 +54,23 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB');
+
+    // Check ML service health
+    try {
+      const mlServiceHealthy = await MLService.checkHealth();
+      console.log(`ML Service health check: ${mlServiceHealthy ? 'Healthy' : 'Unhealthy'}`);
+
+      // Start scheduled tasks if ML service is healthy
+      if (mlServiceHealthy) {
+        SchedulerService.startTasks();
+        console.log('Scheduled tasks started');
+      }
+    } catch (error) {
+      console.warn('ML Service health check failed:', error.message);
+    }
+
     // Start server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {

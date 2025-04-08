@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, Animated, ActivityIndicator } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Card, Button, Badge, Divider, Icon } from 'react-native-elements';
+import { Card, Button, Badge, Divider, Icon, Overlay } from 'react-native-elements';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 import moment from 'moment';
@@ -10,38 +10,114 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(null);
+  const [positionLoading, setPositionLoading] = useState(false);
+  const [positionError, setPositionError] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState(null);
+  const [statusChangeVisible, setStatusChangeVisible] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const auth = useSelector(state => state.auth);
   const { token } = auth;
-  
+
   const { orderId, initialAction } = route.params;
-  
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const config = {
-          headers: {
-            'x-auth-token': token
-          }
-        };
-        
-        const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
-        setOrder(res.data);
-        setLoading(false);
-        
-        // Handle initial actions
-        if (initialAction === 'cancel' && res.data.status === 'pending') {
-          confirmCancelOrder();
-        }
-      } catch (err) {
-        console.error('Error fetching order details:', err);
-        setLoading(false);
-        Alert.alert('Error', 'Could not load order details');
-      }
-    };
+
+  // Animation function for status changes
+  const startPulseAnimation = () => {
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1.2,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+  // Function to fetch queue position
+  const fetchQueuePosition = async () => {
+    if (!order || !['pending', 'preparing'].includes(order.status)) return;
     
+    try {
+      setPositionLoading(true);
+      setPositionError(false);
+      
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+      
+      const res = await axios.get(`${API_URL}/api/queues/user/position/${orderId}`, config);
+      setQueuePosition(res.data);
+      setPositionLoading(false);
+    } catch (err) {
+      console.error('Error fetching queue position:', err);
+      setPositionError(true);
+      setPositionLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async () => {
+    try {
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+
+      const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
+      
+      // Check if the status has changed and show notification
+      if (order && order.status !== res.data.status) {
+        setPreviousStatus(order.status);
+        setStatusChangeVisible(true);
+        startPulseAnimation();
+        
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          setStatusChangeVisible(false);
+        }, 5000);
+      }
+      
+      setOrder(res.data);
+      setLoading(false);
+
+      // Handle initial actions
+      if (initialAction === 'cancel' && res.data.status === 'pending') {
+        confirmCancelOrder();
+      }
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      setLoading(false);
+      Alert.alert('Error', 'Could not load order details');
+    }
+  };
+
+  useEffect(() => {
     fetchOrderDetails();
+    
+    // Poll for order updates
+    const orderInterval = setInterval(fetchOrderDetails, 20000); // Update every 20 seconds
+    
+    return () => clearInterval(orderInterval);
   }, [orderId, initialAction]);
-  
+
+  // Set up polling for queue position updates
+  useEffect(() => {
+    if (!order) return;
+    
+    // Only fetch and poll if the order is pending or preparing
+    if (['pending', 'preparing'].includes(order.status)) {
+      fetchQueuePosition();
+      const interval = setInterval(fetchQueuePosition, 15000); // Update every 15 seconds
+      return () => clearInterval(interval);
+    }
+  }, [order]);
+
   const confirmCancelOrder = () => {
     Alert.alert(
       'Cancel Order',
@@ -52,11 +128,11 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       ]
     );
   };
-  
+
   const handleCancelOrder = async () => {
     try {
       setCancelLoading(true);
-      
+
       const config = {
         headers: {
           'x-auth-token': token
@@ -68,14 +144,14 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       // Update local state
       setOrder({ ...order, status: 'cancelled' });
       setCancelLoading(false);
-      
+
       Alert.alert('Success', 'Your order has been cancelled');
     } catch (err) {
       setCancelLoading(false);
       Alert.alert('Error', err.response?.data?.msg || 'Could not cancel your order');
     }
   };
-  
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return '#f39c12';
@@ -86,7 +162,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       default: return '#95a5a6';
     }
   };
-  
+
   const getStatusText = (status) => {
     switch (status) {
       case 'pending': return 'Pending';
@@ -97,7 +173,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       default: return status;
     }
   };
-  
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -105,7 +181,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       </View>
     );
   }
-  
+
   if (!order) {
     return (
       <View style={styles.center}>
@@ -113,25 +189,26 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       </View>
     );
   }
-  
+
   return (
     <ScrollView style={styles.container}>
-      <Card containerStyle={styles.card}>
-        <View style={styles.orderHeader}>
-          <View>
-            <Text style={styles.orderNumber}>Order #{order.queueNumber}</Text>
-            <Text style={styles.stallName}>{order.stall.name}</Text>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <Card containerStyle={styles.card}>
+          <View style={styles.orderHeader}>
+            <View>
+              <Text style={styles.orderNumber}>Order #{order.queueNumber}</Text>
+              <Text style={styles.stallName}>{order.stall.name}</Text>
+            </View>
+            <Badge
+              value={getStatusText(order.status)}
+              badgeStyle={{
+                backgroundColor: getStatusColor(order.status),
+                paddingHorizontal: 15,
+                paddingVertical: 10
+              }}
+              textStyle={styles.badgeText}
+            />
           </View>
-          <Badge
-            value={getStatusText(order.status)}
-            badgeStyle={{ 
-              backgroundColor: getStatusColor(order.status),
-              paddingHorizontal: 15,
-              paddingVertical: 10
-            }}
-            textStyle={styles.badgeText}
-          />
-        </View>
         
         <Divider style={styles.divider} />
         
@@ -145,7 +222,30 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         {order.estimatedWaitTime && (
           <View style={styles.orderInfo}>
             <Text style={styles.infoHeading}>Estimated Wait Time</Text>
-            <Text style={styles.infoText}>{order.estimatedWaitTime} minutes</Text>
+            <Text style={styles.infoText}>{queuePosition?.estimatedWaitTime || order.estimatedWaitTime} minutes</Text>
+          </View>
+        )}
+        
+        {queuePosition && queuePosition.position > 0 && (order.status === 'pending' || order.status === 'preparing') && (
+          <View style={styles.orderInfo}>
+            <Text style={styles.infoHeading}>Queue Position</Text>
+            <View style={styles.queuePositionContainer}>
+              <Text style={styles.positionText}>You are position #{queuePosition.position} in line</Text>
+              <Text style={styles.currentNumberText}>
+                Now serving: #{queuePosition.currentNumber}
+              </Text>
+              <View style={styles.progressContainer}>
+                <View 
+                  style={[
+                    styles.progressBar, 
+                    {
+                      width: `${Math.min(100, 100 * (1 - queuePosition.position / (queuePosition.position + 5)))}%`,
+                      backgroundColor: getStatusColor(order.status)
+                    }
+                  ]} 
+                />
+              </View>
+            </View>
           </View>
         )}
         
@@ -181,20 +281,122 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         )}
       </Card>
       
-      {(order.status === 'ready' || order.status === 'preparing') && (
+      {(order.status === 'ready' || order.status === 'preparing' || order.status === 'pending') && (
         <Card containerStyle={styles.instructionCard}>
           <Text style={styles.instructionTitle}>
-            {order.status === 'ready' 
-              ? 'Your order is ready for pickup!' 
-              : 'Your order is being prepared'}
+            {order.status === 'ready'
+              ? 'Your order is ready for pickup!'
+              : order.status === 'preparing'
+              ? 'Your order is being prepared'
+              : 'Your order is in queue'}
           </Text>
+
+          {(order.status === 'pending' || order.status === 'preparing') && (
+            <>
+              {positionLoading ? (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="large" color="#3498db" />
+                  <Text style={styles.loadingText}>Getting your position in queue...</Text>
+                </View>
+              ) : positionError ? (
+                <View style={styles.errorContainer}>
+                  <Icon name="error-outline" size={40} color="#e74c3c" />
+                  <Text style={styles.errorText}>Couldn't retrieve queue position</Text>
+                  <Button
+                    title="Try Again"
+                    type="clear"
+                    onPress={fetchQueuePosition}
+                    buttonStyle={styles.retryButton}
+                  />
+                </View>
+              ) : queuePosition && (
+                <View style={styles.queuePositionContainer}>
+                  <View style={styles.queuePositionBadge}>
+                    <Text style={styles.queuePositionNumber}>{queuePosition.position}</Text>
+                  </View>
+                  <Text style={styles.queuePositionText}>
+                    {queuePosition.position === 0
+                      ? 'You are next in line!'
+                      : `There ${queuePosition.position === 1 ? 'is' : 'are'} ${queuePosition.position} order${queuePosition.position === 1 ? '' : 's'} ahead of you`}
+                  </Text>
+                  <Text style={styles.queueInfoText}>Current serving: #{queuePosition.currentNumber}</Text>
+                  <Text style={styles.queueInfoText}>Your number: #{queuePosition.queueNumber}</Text>
+
+                  {/* Queue progress bar */}
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width: `${Math.min(100, Math.max(5, (queuePosition.currentNumber / queuePosition.lastNumber) * 100))}%`,
+                            backgroundColor: queuePosition.position === 0 ? '#2ecc71' : '#3498db'
+                          }
+                        ]}
+                      />
+                    </View>
+                    <View style={styles.progressLabels}>
+                      <Text style={styles.progressLabel}>Queue Start</Text>
+                      <Text style={styles.progressLabel}>Your Order</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.estimatedTimeText}>
+                    Estimated wait: ~{queuePosition.estimatedWaitTime} minutes
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+
           <Text style={styles.instructionText}>
             {order.status === 'ready'
               ? 'Head to the stall and show this order screen to collect your food.'
-              : `Your food is being prepared. Estimated wait time: ${order.estimatedWaitTime} minutes.`}
+              : queuePosition
+                ? 'We\'ll notify you when your order is ready for pickup.'
+                : `Your food is being prepared. Estimated wait time: ${order.estimatedWaitTime} minutes.`}
           </Text>
         </Card>
       )}
+
+      {/* Status change notification overlay */}
+      <Overlay
+        isVisible={statusChangeVisible}
+        onBackdropPress={() => setStatusChangeVisible(false)}
+        overlayStyle={styles.statusOverlay}
+      >
+        <Icon
+          name={order?.status === 'ready' ? 'check-circle' : 'info'}
+          color={getStatusColor(order?.status)}
+          size={36}
+          containerStyle={{ marginBottom: 15 }}
+        />
+        <Text style={styles.statusChangeTitle}>
+          Order Status Updated
+        </Text>
+        <Text style={styles.statusChangeText}>
+          Your order status has changed from{' '}
+          <Text style={{ fontWeight: 'bold', color: getStatusColor(previousStatus) }}>
+            {getStatusText(previousStatus)}
+          </Text>{' '}
+          to{' '}
+          <Text style={{ fontWeight: 'bold', color: getStatusColor(order?.status) }}>
+            {getStatusText(order?.status)}
+          </Text>
+        </Text>
+        {order?.status === 'ready' && (
+          <Text style={styles.readyInstructions}>
+            Your food is ready for pickup! Please proceed to the stall counter.
+          </Text>
+        )}
+        <Button
+          title="OK"
+          onPress={() => setStatusChangeVisible(false)}
+          buttonStyle={[styles.statusButton, { backgroundColor: getStatusColor(order?.status) }]}
+          containerStyle={{ marginTop: 15, width: '50%' }}
+        />
+      </Overlay>
+    </Animated.View>
     </ScrollView>
   );
 };
@@ -238,12 +440,12 @@ const styles = StyleSheet.create({
     marginVertical: 15
   },
   orderInfo: {
-    marginBottom: 10
+    marginBottom: 15
   },
   infoHeading: {
     fontSize: 14,
     color: '#7f8c8d',
-    marginBottom: 3
+    marginBottom: 5
   },
   infoText: {
     fontSize: 16
@@ -308,6 +510,127 @@ const styles = StyleSheet.create({
   instructionText: {
     fontSize: 16,
     lineHeight: 22
+  },
+  queuePositionContainer: {
+    alignItems: 'center',
+    marginVertical: 15,
+    padding: 10,
+    backgroundColor: '#f8fffa',
+    borderRadius: 8
+  },
+  queuePositionBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#3498db',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  queuePositionNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  queuePositionText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10
+  },
+  queueInfoText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+  },
+  estimatedTimeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#e67e22',
+    marginTop: 10,
+    textAlign: 'center'
+  },
+  progressContainer: {
+    width: '100%',
+    marginVertical: 15
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: '#ecf0f1',
+    borderRadius: 5,
+    overflow: 'hidden'
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 5
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#7f8c8d'
+  },
+  loaderContainer: {
+    alignItems: 'center',
+    paddingVertical: 20
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#7f8c8d'
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#e74c3c'
+  },
+  retryButton: {
+    marginTop: 10
+  },
+  statusOverlay: {
+    width: '80%',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center'
+  },
+  statusChangeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center'
+  },
+  statusChangeText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 22
+  },
+  readyInstructions: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: 'bold',
+    color: '#2ecc71'
+  },
+  statusButton: {
+    paddingHorizontal: 20
+  },
+  positionText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  currentNumberText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 10
   }
 });
 
