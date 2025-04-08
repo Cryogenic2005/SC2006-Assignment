@@ -1,7 +1,7 @@
 // store/slices/orderSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { API_URL } from '../../constants/constants';
+import { API_BASE_URL } from '../../constants/api';
 
 // Get user orders
 export const getUserOrders = createAsyncThunk(
@@ -16,7 +16,7 @@ export const getUserOrders = createAsyncThunk(
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/orders/user`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/orders/user`, config);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
@@ -38,7 +38,7 @@ export const createOrder = createAsyncThunk(
         }
       };
       
-      const res = await axios.post(`${API_URL}/api/orders`, orderData, config);
+      const res = await axios.post(`${API_BASE_URL}/api/orders`, orderData, config);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
@@ -59,7 +59,7 @@ export const cancelOrder = createAsyncThunk(
         }
       };
       
-      await axios.put(`${API_URL}/api/orders/${orderId}/cancel`, {}, config);
+      await axios.put(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {}, config);
       return orderId;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
