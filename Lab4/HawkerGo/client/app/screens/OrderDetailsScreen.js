@@ -11,12 +11,9 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [queuePosition, setQueuePosition] = useState(null);
-<<<<<<< HEAD
   const [previousStatus, setPreviousStatus] = useState(null);
   const [statusChangeVisible, setStatusChangeVisible] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-=======
->>>>>>> a181aa7e53f467a9ad88c9e24da2af62c8843c97
   const auth = useSelector(state => state.auth);
   const { token } = auth;
 
@@ -40,31 +37,65 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const config = {
-          headers: {
-            'x-auth-token': token
-          }
-        };
+  // Animation function for status changes
+  const startPulseAnimation = () => {
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1.2,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
 
-        const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
-        setOrder(res.data);
-        setLoading(false);
-
-        // Handle initial actions
-        if (initialAction === 'cancel' && res.data.status === 'pending') {
-          confirmCancelOrder();
+  const fetchOrderDetails = async () => {
+    try {
+      const config = {
+        headers: {
+          'x-auth-token': token
         }
-      } catch (err) {
-        console.error('Error fetching order details:', err);
-        setLoading(false);
-        Alert.alert('Error', 'Could not load order details');
-      }
-    };
+      };
 
+      const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
+      
+      // Check if the status has changed and show notification
+      if (order && order.status !== res.data.status) {
+        setPreviousStatus(order.status);
+        setStatusChangeVisible(true);
+        startPulseAnimation();
+        
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          setStatusChangeVisible(false);
+        }, 5000);
+      }
+      
+      setOrder(res.data);
+      setLoading(false);
+
+      // Handle initial actions
+      if (initialAction === 'cancel' && res.data.status === 'pending') {
+        confirmCancelOrder();
+      }
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      setLoading(false);
+      Alert.alert('Error', 'Could not load order details');
+    }
+  };
+
+  useEffect(() => {
     fetchOrderDetails();
+    
+    // Poll for order updates
+    const orderInterval = setInterval(fetchOrderDetails, 20000); // Update every 20 seconds
+    
+    return () => clearInterval(orderInterval);
   }, [orderId, initialAction]);
   
   // Set up polling for queue position updates
@@ -198,22 +229,23 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   
   return (
     <ScrollView style={styles.container}>
-      <Card containerStyle={styles.card}>
-        <View style={styles.orderHeader}>
-          <View>
-            <Text style={styles.orderNumber}>Order #{order.queueNumber}</Text>
-            <Text style={styles.stallName}>{order.stall.name}</Text>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <Card containerStyle={styles.card}>
+          <View style={styles.orderHeader}>
+            <View>
+              <Text style={styles.orderNumber}>Order #{order.queueNumber}</Text>
+              <Text style={styles.stallName}>{order.stall.name}</Text>
+            </View>
+            <Badge
+              value={getStatusText(order.status)}
+              badgeStyle={{
+                backgroundColor: getStatusColor(order.status),
+                paddingHorizontal: 15,
+                paddingVertical: 10
+              }}
+              textStyle={styles.badgeText}
+            />
           </View>
-          <Badge
-            value={getStatusText(order.status)}
-            badgeStyle={{ 
-              backgroundColor: getStatusColor(order.status),
-              paddingHorizontal: 15,
-              paddingVertical: 10
-            }}
-            textStyle={styles.badgeText}
-          />
-        </View>
         
         <Divider style={styles.divider} />
         
@@ -360,6 +392,44 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </Text>
         </Card>
       )}
+      
+      {/* Status change notification overlay */}
+      <Overlay
+        isVisible={statusChangeVisible}
+        onBackdropPress={() => setStatusChangeVisible(false)}
+        overlayStyle={styles.statusOverlay}
+      >
+        <Icon
+          name={order?.status === 'ready' ? 'check-circle' : 'info'}
+          color={getStatusColor(order?.status)}
+          size={36}
+          containerStyle={{ marginBottom: 15 }}
+        />
+        <Text style={styles.statusChangeTitle}>
+          Order Status Updated
+        </Text>
+        <Text style={styles.statusChangeText}>
+          Your order status has changed from{' '}
+          <Text style={{ fontWeight: 'bold', color: getStatusColor(previousStatus) }}>
+            {getStatusText(previousStatus)}
+          </Text>{' '}
+          to{' '}
+          <Text style={{ fontWeight: 'bold', color: getStatusColor(order?.status) }}>
+            {getStatusText(order?.status)}
+          </Text>
+        </Text>
+        {order?.status === 'ready' && (
+          <Text style={styles.readyInstructions}>
+            Your food is ready for pickup! Please proceed to the stall counter.
+          </Text>
+        )}
+        <Button
+          title="OK"
+          onPress={() => setStatusChangeVisible(false)}
+          buttonStyle={[styles.statusButton, { backgroundColor: getStatusColor(order?.status) }]}
+          containerStyle={{ marginTop: 15, width: '50%' }}
+        />
+      </Overlay>
     </ScrollView>
   );
 };
@@ -498,6 +568,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22
   },
+  statusOverlay: {
+    width: '80%',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center'
+  },
+  statusChangeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center'
+  },
+  statusChangeText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 22
+  },
+  readyInstructions: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: 'bold',
+    color: '#2ecc71'
+  },
+  statusButton: {
+    paddingHorizontal: 20
+  }
+});
   queuePositionContainer: {
     alignItems: 'center',
     marginVertical: 15,
