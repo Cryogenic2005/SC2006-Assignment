@@ -26,7 +26,12 @@ const HawkerDetailScreen = ({ route, navigation }) => {
     // Get user location and calculate route options
     const getLocationAndRoutes = async () => {
       try {
-        const location = await getCurrentLocation();
+        // const location = await getCurrentLocation();
+        const location = {
+          latitude: 1.3521,   // Replace with actual latitude
+          longitude: 103.8198 // Replace with actual longitude
+        }
+        
         setUserLocation(location);
         
         if (currentHawker && currentHawker.location && location) {
@@ -47,7 +52,7 @@ const HawkerDetailScreen = ({ route, navigation }) => {
     if (currentHawker) {
       getLocationAndRoutes();
     }
-  }, [hawkerId, currentHawker]);
+  }, [hawkerId]);
   
   const getCrowdLevelColor = (level) => {
     switch (level) {
@@ -135,7 +140,8 @@ const HawkerDetailScreen = ({ route, navigation }) => {
             <Icon name="access-time" size={24} color="#e67e22" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Operating Hours</Text>
-              <Text style={styles.infoValue}>{currentHawker.operatingHours}</Text>
+              {/* <Text style={styles.infoValue}>{currentHawker.operatingHours}</Text> */}
+              <Text style={styles.infoValue}>Test</Text>
             </View>
           </View>
         </Card>
