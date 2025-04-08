@@ -97,8 +97,8 @@ class HawkerInfoFinder:
         """
         
         # Get the list of nearby bus stops
-        nearby_bus_stops = self.client.requestNearbySearch(hawker_center_info.longitude,
-                                                           hawker_center_info.latitude,
+        nearby_bus_stops = self.client.requestNearbySearch(hawker_center_info.latitude,
+                                                           hawker_center_info.longitude,
                                                            radius=radius,
                                                            types=types)
         

@@ -49,8 +49,8 @@ def collect_data():
     """Run the data collection script."""
     print("Starting data collection process...")
     try:
-        from data_collector import main
-        main()
+        from data_collector import main as data_collector_main
+        data_collector_main()
         print("✅ Data collection completed successfully.")
     except Exception as e:
         print(f"❌ Error during data collection: {e}")
@@ -71,7 +71,7 @@ def start_api():
     """Start the API service."""
     print("Starting API service...")
     try:
-        subprocess.run(["python", "api_service.py"], check=True)
+        subprocess.run(["python", "api.py"], check=True)
     except KeyboardInterrupt:
         print("\nAPI service stopped.")
     except Exception as e:

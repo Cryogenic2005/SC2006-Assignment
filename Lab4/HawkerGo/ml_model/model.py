@@ -12,6 +12,7 @@ from sklearn.metrics import classification_report
 from dotenv import load_dotenv
 
 from lta_datamall import LTADataMallClient, LTADataMallEndpoints
+from hawker_finder import HawkerInfoFinder
 
 class HawkerCrowdPredictor:
     """Predicts crowd levels at hawker centers using LTA DataMall API data.
