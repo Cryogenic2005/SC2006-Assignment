@@ -195,12 +195,6 @@ const ProfileScreen = ({ navigation }) => {
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="help" color="#9b59b6" size={24} />
-          <Text style={styles.menuItemText}>Help & Support</Text>
-          <Icon name="chevron-right" color="#bdc3c7" size={24} />
-        </TouchableOpacity>
-        
         <TouchableOpacity 
           onPress={handleLogout}
           style={styles.menuItem}

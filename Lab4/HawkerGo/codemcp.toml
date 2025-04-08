@@ -1,0 +1,4 @@
+[commands]
+format = ["./run_format.sh"]  # Global formatter command
+test = ["./run_test.sh"]      # Global test runner command
+allow_edit = true

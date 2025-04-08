@@ -5,7 +5,7 @@ import { Card, Button, Icon, Divider } from 'react-native-elements';
 import { getHawkerById, getStallsByHawker } from '../store/slices/hawkerSlice';
 import StallCard from '../components/StallCard';
 import MapView, { Marker } from 'react-native-maps';
-import { calculateRoute } from '../services/locationService';
+import { calculateRoute, getCurrentLocation } from '../services/locationService';
 
 const HawkerDetailScreen = ({ route, navigation }) => {
   const { hawkerId, hawkerName } = route.params;
