@@ -1,5 +1,5 @@
 const axios = require('axios');
-const config = require('../config');
+//const config = require('../config');
 
 const ML_API_BASE_URL = process.env.ML_API_URL || 'http://localhost:5000';
 
