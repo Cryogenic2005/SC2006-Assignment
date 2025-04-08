@@ -1,47 +1,50 @@
 const Crowd = require('../models/Crowd');
 const Hawker = require('../models/Hawker');
+const MLService = require('../services/mlService');
 
 // Report crowd level
 exports.reportCrowdLevel = async (req, res) => {
   try {
     const { hawkerId, level } = req.body;
-    
+
     // Validate hawker exists
     const hawker = await Hawker.findById(hawkerId);
     if (!hawker) {
       return res.status(404).json({ msg: 'Hawker center not found' });
     }
-    
+
     // Check if user has already reported in the last 30 minutes
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    
+
     const existingReport = await Crowd.findOne({
       hawker: hawkerId,
       reportedBy: req.user.id,
       timestamp: { $gt: thirtyMinutesAgo }
     });
-    
+
     if (existingReport) {
-      return res.status(400).json({ 
-        msg: 'You have already submitted a crowd report recently' 
+      return res.status(400).json({
+        msg: 'You have already submitted a crowd report recently'
       });
     }
-    
+
     // Create new crowd report
     const newCrowdReport = new Crowd({
       hawker: hawkerId,
       level,
-      reportedBy: req.user.id
+      reportedBy: req.user.id,
+      source: 'user_report'
     });
-    
+
     await newCrowdReport.save();
-    
+
     // Update most recent validated crowd report
     const reports = await Crowd.find({
       hawker: hawkerId,
-      timestamp: { $gt: thirtyMinutesAgo }
+      timestamp: { $gt: thirtyMinutesAgo },
+      source: 'user_report'
     });
-    
+
     // Simple validation - if multiple reports exist with the same level
     if (reports.length >= 3) {
       // Count levels
@@ -52,31 +55,31 @@ exports.reportCrowdLevel = async (req, res) => {
         }
         levelCounts[report.level]++;
       });
-      
+
       // Find most reported level
       let mostReportedLevel = '';
       let maxCount = 0;
-      
+
       Object.keys(levelCounts).forEach(level => {
         if (levelCounts[level] > maxCount) {
           maxCount = levelCounts[level];
           mostReportedLevel = level;
         }
       });
-      
+
       // If at least 3 reports agree, validate them
       if (maxCount >= 3) {
         await Crowd.updateMany(
-          { 
-            hawker: hawkerId, 
+          {
+            hawker: hawkerId,
             level: mostReportedLevel,
-            timestamp: { $gt: thirtyMinutesAgo } 
+            timestamp: { $gt: thirtyMinutesAgo }
           },
           { validated: true }
         );
       }
     }
-    
+
     res.json({ msg: 'Crowd level reported successfully' });
   } catch (err) {
     console.error(err.message);
@@ -88,7 +91,7 @@ exports.reportCrowdLevel = async (req, res) => {
 exports.getCurrentCrowdLevel = async (req, res) => {
   try {
     const { hawkerId } = req.params;
-    
+
     // Find the most recent validated crowd report
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const validatedReport = await Crowd.findOne({
@@ -96,29 +99,87 @@ exports.getCurrentCrowdLevel = async (req, res) => {
       validated: true,
       timestamp: { $gt: thirtyMinutesAgo }
     }).sort({ timestamp: -1 });
-    
+
     if (validatedReport) {
-      return res.json({ level: validatedReport.level });
+      return res.json({ 
+        level: validatedReport.level,
+        source: 'user_validated',
+        timestamp: validatedReport.timestamp
+      });
     }
-    
+
     // If no validated report, get most recent report
     const recentReport = await Crowd.findOne({
       hawker: hawkerId,
       timestamp: { $gt: thirtyMinutesAgo }
     }).sort({ timestamp: -1 });
-    
+
+    // If there's a recent user report, return it
     if (recentReport) {
-      return res.json({ 
-        level: recentReport.level, 
+      return res.json({
+        level: recentReport.level,
         validated: false,
+        source: recentReport.source || 'user_report',
+        timestamp: recentReport.timestamp,
         message: 'This crowd level has not been validated by multiple users'
       });
     }
+
+    // If no recent user reports, try to get ML prediction
+    try {
+      const mlPrediction = await MLService.getPrediction(hawkerId);
+      
+      // Save the ML prediction to the database
+      const newCrowdReport = new Crowd({
+        hawker: hawkerId,
+        level: mlPrediction.crowd_level,
+        source: 'ml_prediction',
+        confidence: mlPrediction.confidence
+      });
+      
+      await newCrowdReport.save();
+      
+      return res.json({
+        level: mlPrediction.crowd_level,
+        validated: false,
+        source: 'ml_prediction',
+        confidence: mlPrediction.confidence,
+        timestamp: new Date(),
+        message: 'This crowd level is based on machine learning prediction'
+      });
+    } catch (mlError) {
+      console.error('ML prediction failed:', mlError.message);
+      
+      // If ML prediction fails, return unknown status
+      return res.json({
+        level: 'Unknown',
+        message: 'No recent crowd reports available'
+      });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Get ML prediction for a hawker center
+exports.getMLPrediction = async (req, res) => {
+  try {
+    const { hawkerId } = req.params;
     
-    res.json({ 
-      level: 'Unknown', 
-      message: 'No recent crowd reports available'
-    });
+    const prediction = await MLService.getPrediction(hawkerId);
+    res.json(prediction);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Get ML predictions for all hawker centers
+exports.getAllMLPredictions = async (req, res) => {
+  try {
+    const predictions = await MLService.getAllPredictions();
+    res.json(predictions);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

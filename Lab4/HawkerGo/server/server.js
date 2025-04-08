@@ -30,6 +30,10 @@ app.use('/api/queues', queueRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/crowd', crowdRoutes);
 
+// Services
+const MLService = require('./src/services/mlService');
+const SchedulerService = require('./src/services/scheduler');
+
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
@@ -52,6 +56,41 @@ mongoose
   })
   .then(() => {
     console.log('Connected to MongoDB');
+    // Start server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+
+// Before starting the server, check ML service health
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(async () => {
+    console.log('Connected to MongoDB');
+    
+    // Check ML service health
+    try {
+      const mlServiceHealthy = await MLService.checkHealth();
+      console.log(`ML Service health check: ${mlServiceHealthy ? 'Healthy' : 'Unhealthy'}`);
+      
+      // Start scheduled tasks if ML service is healthy
+      if (mlServiceHealthy) {
+        SchedulerService.startTasks();
+        console.log('Scheduled tasks started');
+      }
+    } catch (error) {
+      console.warn('ML Service health check failed:', error.message);
+    }
+    
     // Start server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {

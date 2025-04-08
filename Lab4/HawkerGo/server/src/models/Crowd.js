@@ -1,4 +1,3 @@
-// models/Crowd.js
 const mongoose = require('mongoose');
 
 const CrowdSchema = new mongoose.Schema({
@@ -9,7 +8,7 @@ const CrowdSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
+    enum: ['Low', 'Medium', 'High', 'Unknown'],
     required: true
   },
   reportedBy: {
@@ -27,6 +26,16 @@ const CrowdSchema = new mongoose.Schema({
   validationCount: {
     type: Number,
     default: 0
+  },
+  source: {
+    type: String,
+    enum: ['user_report', 'ml_prediction', 'admin'],
+    default: 'user_report'
+  },
+  confidence: {
+    type: Number,
+    min: 0,
+    max: 1
   }
 });
 
