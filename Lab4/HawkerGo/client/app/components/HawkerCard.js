@@ -46,7 +46,7 @@ const HawkerCard = ({ hawker, crowdLevel, distance, onPress }) => {
               </View>
             )}
             
-            {distance !== null && (
+            {distance != null && (
               <View style={styles.infoItem}>
                 <Icon name="place" size={16} color="#7f8c8d" />
                 <Text style={styles.infoText}>
