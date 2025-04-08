@@ -26,7 +26,7 @@ const HawkerDetailScreen = ({ route, navigation }) => {
     // Get user location and calculate route options
     const getLocationAndRoutes = async () => {
       try {
-        // const location = await getCurrentLocation();
+        const location = await getCurrentLocation();
         const location = {
           latitude: 1.3521,   // Replace with actual latitude
           longitude: 103.8198 // Replace with actual longitude
