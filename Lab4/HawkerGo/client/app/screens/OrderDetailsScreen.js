@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, Animated } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Card, Button, Badge, Divider, Icon } from 'react-native-elements';
+import { Card, Button, Badge, Divider, Icon, Overlay } from 'react-native-elements';
 import axios from 'axios';
 import { API_URL } from '../constants';
 import moment from 'moment';
@@ -10,11 +10,30 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(null);
   const auth = useSelector(state => state.auth);
   const { token } = auth;
-  
+
   const { orderId, initialAction } = route.params;
-  
+
+  // Function to fetch queue position
+  const fetchQueuePosition = async () => {
+    if (!order || !['pending', 'preparing'].includes(order.status)) return;
+    
+    try {
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+      
+      const res = await axios.get(`${API_URL}/api/queues/user/position/${orderId}`, config);
+      setQueuePosition(res.data);
+    } catch (err) {
+      console.error('Error fetching queue position:', err);
+    }
+  };
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -23,11 +42,11 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             'x-auth-token': token
           }
         };
-        
+
         const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
         setOrder(res.data);
         setLoading(false);
-        
+
         // Handle initial actions
         if (initialAction === 'cancel' && res.data.status === 'pending') {
           confirmCancelOrder();
@@ -38,8 +57,65 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         Alert.alert('Error', 'Could not load order details');
       }
     };
-    
+
     fetchOrderDetails();
+  }, [orderId, initialAction]);
+  
+  // Set up polling for queue position updates
+  useEffect(() => {
+    if (!order) return;
+    
+    fetchQueuePosition();
+    
+    // Only poll if the order is pending or preparing
+    if (['pending', 'preparing'].includes(order.status)) {
+      const interval = setInterval(fetchQueuePosition, 15000); // Update every 15 seconds
+      return () => clearInterval(interval);
+    }
+  }, [order]);
+        // If order is active, fetch queue position and set up polling
+        if (res.data.status === 'pending' || res.data.status === 'preparing') {
+          fetchQueuePosition();
+          
+          // Poll for queue position updates every 15 seconds
+          intervalId = setInterval(fetchQueuePosition, 15000);
+        }
+      } catch (err) {
+        console.error('Error fetching order details:', err);
+        setLoading(false);
+        Alert.alert('Error', 'Could not load order details');
+      }
+    };
+    
+    const fetchQueuePosition = async () => {
+      try {
+        setPositionLoading(true);
+        setPositionError(false);
+        
+        const config = {
+          headers: {
+            'x-auth-token': token
+          }
+        };
+        
+        const res = await axios.get(`${API_URL}/api/queues/user/position/${orderId}`, config);
+        setQueuePosition(res.data);
+        setPositionLoading(false);
+      } catch (err) {
+        console.error('Error fetching queue position:', err);
+        setPositionError(true);
+        setPositionLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+    
+    // Clean up interval on unmount
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [orderId, initialAction]);
   
   const confirmCancelOrder = () => {
@@ -145,7 +221,30 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         {order.estimatedWaitTime && (
           <View style={styles.orderInfo}>
             <Text style={styles.infoHeading}>Estimated Wait Time</Text>
-            <Text style={styles.infoText}>{order.estimatedWaitTime} minutes</Text>
+            <Text style={styles.infoText}>{queuePosition?.estimatedWaitTime || order.estimatedWaitTime} minutes</Text>
+          </View>
+        )}
+        
+        {queuePosition && queuePosition.position > 0 && (order.status === 'pending' || order.status === 'preparing') && (
+          <View style={styles.orderInfo}>
+            <Text style={styles.infoHeading}>Queue Position</Text>
+            <View style={styles.queuePositionContainer}>
+              <Text style={styles.positionText}>You are position #{queuePosition.position} in line</Text>
+              <Text style={styles.currentNumberText}>
+                Now serving: #{queuePosition.currentNumber}
+              </Text>
+              <View style={styles.progressContainer}>
+                <View 
+                  style={[
+                    styles.progressBar, 
+                    {
+                      width: `${Math.min(100, 100 * (1 - queuePosition.position / (queuePosition.position + 5)))}%`,
+                      backgroundColor: getStatusColor(order.status)
+                    }
+                  ]} 
+                />
+              </View>
+            </View>
           </View>
         )}
         
@@ -181,17 +280,77 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         )}
       </Card>
       
-      {(order.status === 'ready' || order.status === 'preparing') && (
+      {(order.status === 'ready' || order.status === 'preparing' || order.status === 'pending') && (
         <Card containerStyle={styles.instructionCard}>
           <Text style={styles.instructionTitle}>
-            {order.status === 'ready' 
-              ? 'Your order is ready for pickup!' 
-              : 'Your order is being prepared'}
+            {order.status === 'ready'
+              ? 'Your order is ready for pickup!'
+              : order.status === 'preparing'
+              ? 'Your order is being prepared'
+              : 'Your order is in queue'}
           </Text>
+          
+          {queuePosition && (order.status === 'pending' || order.status === 'preparing') && (
+          {positionLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#3498db" />
+              <Text style={styles.loadingText}>Getting your position in queue...</Text>
+            </View>
+          ) : positionError ? (
+            <View style={styles.errorContainer}>
+              <Icon name="error-outline" size={40} color="#e74c3c" />
+              <Text style={styles.errorText}>Couldn't retrieve queue position</Text>
+              <Button
+                title="Try Again"
+                type="clear"
+                onPress={fetchQueuePosition}
+                buttonStyle={styles.retryButton}
+              />
+            </View>
+          ) : queuePosition && (
+            <View style={styles.queuePositionContainer}>
+              <View style={styles.queuePositionBadge}>
+                <Text style={styles.queuePositionNumber}>{queuePosition.position}</Text>
+              </View>
+              <Text style={styles.queuePositionText}>
+                {queuePosition.position === 0 
+                  ? 'You are next in line!'
+                  : `There ${queuePosition.position === 1 ? 'is' : 'are'} ${queuePosition.position} order${queuePosition.position === 1 ? '' : 's'} ahead of you`}
+              </Text>
+              <Text style={styles.queueInfoText}>Current serving: #{queuePosition.currentNumber}</Text>
+              <Text style={styles.queueInfoText}>Your number: #{queuePosition.queueNumber}</Text>
+              
+              {/* Queue progress bar */}
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { 
+                        width: `${Math.min(100, Math.max(5, (queuePosition.currentNumber / queuePosition.lastNumber) * 100))}%`,
+                        backgroundColor: queuePosition.position === 0 ? '#2ecc71' : '#3498db'
+                      }
+                    ]} 
+                  />
+                </View>
+                <View style={styles.progressLabels}>
+                  <Text style={styles.progressLabel}>Queue Start</Text>
+                  <Text style={styles.progressLabel}>Your Order</Text>
+                </View>
+              </View>
+              
+              <Text style={styles.estimatedTimeText}>
+                Estimated wait: ~{queuePosition.estimatedWaitTime} minutes
+              </Text>
+            </View>
+          )}
+          
           <Text style={styles.instructionText}>
             {order.status === 'ready'
               ? 'Head to the stall and show this order screen to collect your food.'
-              : `Your food is being prepared. Estimated wait time: ${order.estimatedWaitTime} minutes.`}
+              : queuePosition
+                ? 'We\'ll notify you when your order is ready for pickup.'
+                : `Your food is being prepared. Estimated wait time: ${order.estimatedWaitTime} minutes.`}
           </Text>
         </Card>
       )}
@@ -238,15 +397,39 @@ const styles = StyleSheet.create({
     marginVertical: 15
   },
   orderInfo: {
-    marginBottom: 10
+    marginBottom: 15
   },
   infoHeading: {
     fontSize: 14,
     color: '#7f8c8d',
-    marginBottom: 3
+    marginBottom: 5
   },
   infoText: {
     fontSize: 16
+  },
+  queuePositionContainer: {
+    marginTop: 5
+  },
+  positionText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  currentNumberText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 8
+  },
+  progressContainer: {
+    height: 10,
+    backgroundColor: '#ecf0f1',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginTop: 5
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 10
   },
   sectionTitle: {
     fontSize: 18,
@@ -308,6 +491,89 @@ const styles = StyleSheet.create({
   instructionText: {
     fontSize: 16,
     lineHeight: 22
+  },
+  queuePositionContainer: {
+    alignItems: 'center',
+    marginVertical: 15,
+    padding: 10,
+    backgroundColor: '#f8fffa',
+    borderRadius: 8
+  },
+  queuePositionBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#3498db',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  queuePositionNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  queuePositionText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10
+  },
+  queueInfoText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+  },
+  estimatedTimeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#e67e22',
+    marginTop: 10,
+    textAlign: 'center'
+  },
+  progressContainer: {
+    width: '100%',
+    marginVertical: 15
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: '#ecf0f1',
+    borderRadius: 5,
+    overflow: 'hidden'
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 5
+  },
+  progressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#7f8c8d'
+  },
+  loaderContainer: {
+    alignItems: 'center',
+    paddingVertical: 20
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#7f8c8d'
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#e74c3c'
+  },
+  retryButton: {
+    marginTop: 10
   }
 });
 
