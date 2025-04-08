@@ -22,17 +22,26 @@ def collect_hawker_centers(api_key, amount=100):
     finder = HawkerInfoFinder(api_key)
     all_hawkers = []
     next_page_token = None
-    
+
     print("Collecting hawker center data...")
     while len(all_hawkers) < amount:
-        hawkers, next_page_token = finder.findHawkerCenters(
-            amount=min(20, amount - len(all_hawkers)),
-            page_token=next_page_token
-        )
-        all_hawkers.extend(hawkers)
-        if not next_page_token:
-            break
-    
+        try:
+            hawkers, next_page_token = finder.findHawkerCenters(
+                amount=min(20, amount - len(all_hawkers)),
+                page_token=next_page_token
+            )
+            all_hawkers.extend(hawkers)
+            if not next_page_token:
+                break
+        except Exception as e:
+            print(f"Error while collecting hawker centers: {e}")
+            # If we at least found some hawkers, return them instead of failing completely
+            if all_hawkers:
+                print(f"Returning {len(all_hawkers)} hawker centers found before error")
+                break
+            else:
+                raise
+
     print(f"Found {len(all_hawkers)} hawker centers")
     return all_hawkers
 

@@ -23,11 +23,19 @@ db = mongo_client["hawkergo"]
 # Initialize HawkerCrowdPredictor
 lta_api_key = os.getenv("LTA_DATAMALL_API_KEY")
 model_path = "hawker_crowd_model.pkl"
-predictor = HawkerCrowdPredictor(
-    lta_api_key=lta_api_key,
-    mongo_uri=mongo_uri,
-    model_path=model_path
-)
+try:
+    predictor = HawkerCrowdPredictor(
+        lta_api_key=lta_api_key,
+        mongo_uri=mongo_uri,
+        model_path=model_path
+    )
+    if not os.path.exists(model_path):
+        print(f"Warning: Model file {model_path} not found. Running train_and_save_model...")
+        from model import train_and_save_model
+        train_and_save_model()
+except Exception as e:
+    print(f"Error initializing predictor: {e}")
+    predictor = None
 
 @app.route('/api/hawkers', methods=['GET'])
 def get_hawkers():
@@ -82,6 +90,9 @@ def get_nearby_hawkers():
 @app.route('/api/hawkers/<hawker_id>/crowd', methods=['GET'])
 def get_hawker_crowd(hawker_id):
     """Get crowd level prediction for a hawker center."""
+    if predictor is None:
+        return jsonify({"error": "Predictor not initialized"}), 500
+        
     try:
         level, confidence = predictor.predict_crowd(hawker_id)
         return jsonify({
@@ -91,11 +102,15 @@ def get_hawker_crowd(hawker_id):
             "timestamp": time.time()
         })
     except Exception as e:
+        print(f"Error predicting crowd for hawker {hawker_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/hawkers/batch-crowd', methods=['POST'])
 def get_batch_crowd():
     """Get crowd level predictions for multiple hawker centers."""
+    if predictor is None:
+        return jsonify({"error": "Predictor not initialized"}), 500
+        
     data = request.get_json()
 
     if not data or not isinstance(data, dict) or 'hawker_ids' not in data:
@@ -106,15 +121,22 @@ def get_batch_crowd():
 
     for hawker_id in hawker_ids:
         try:
+            # Get hawker name if available
+            hawker = db["hawker_centers"].find_one({"id": hawker_id})
+            hawker_name = hawker.get("displayName", "Unknown") if hawker else "Unknown"
+            
             level, confidence = predictor.predict_crowd(hawker_id)
             results.append({
                 "hawker_id": hawker_id,
+                "hawker_name": hawker_name,
                 "crowd_level": level,
                 "confidence": confidence
             })
         except Exception as e:
+            print(f"Error predicting for hawker {hawker_id}: {str(e)}")
             results.append({
                 "hawker_id": hawker_id,
+                "hawker_name": "Unknown",
                 "error": str(e)
             })
 
@@ -138,6 +160,9 @@ def get_postal_codes():
 @app.route('/predict/<hawker_id>', methods=['GET'])
 def predict_crowd(hawker_id):
     """Get crowd level prediction for a hawker center (endpoint for mlService.js)."""
+    if predictor is None:
+        return jsonify({"error": "Predictor not initialized"}), 500
+        
     try:
         level, confidence = predictor.predict_crowd(hawker_id)
         return jsonify({
@@ -147,24 +172,34 @@ def predict_crowd(hawker_id):
             "timestamp": time.time()
         })
     except Exception as e:
+        print(f"Error predicting crowd for hawker {hawker_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/predict/all', methods=['GET'])
 def predict_all_crowds():
     """Get crowd level predictions for all hawker centers."""
+    if predictor is None:
+        return jsonify({"error": "Predictor not initialized"}), 500
+        
     try:
         # Get all hawker centers
         hawkers = list(db["hawker_centers"].find())
+        if not hawkers:
+            return jsonify({"error": "No hawker centers found in database"}), 404
+            
         results = []
 
         for hawker in hawkers:
             # Use either '_id' or 'id' field based on what's available
-            hawker_id = str(hawker.get("_id", hawker.get("id")))
-            
+            hawker_id = str(hawker.get("_id", hawker.get("id", "")))
+            if not hawker_id:
+                continue
+
             try:
                 level, confidence = predictor.predict_crowd(hawker_id)
                 results.append({
                     "hawker_id": hawker_id,
+                    "hawker_name": hawker.get("displayName", "Unknown"),
                     "crowd_level": level,
                     "confidence": confidence
                 })
@@ -172,12 +207,14 @@ def predict_all_crowds():
                 print(f"Error predicting for hawker {hawker_id}: {str(e)}")
                 results.append({
                     "hawker_id": hawker_id,
+                    "hawker_name": hawker.get("displayName", "Unknown"),
                     "crowd_level": "Unknown",
                     "confidence": 0
                 })
 
         return jsonify(results)
     except Exception as e:
+        print(f"Error predicting for all hawkers: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/update-mappings', methods=['POST'])

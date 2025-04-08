@@ -12,6 +12,7 @@ from sklearn.metrics import classification_report
 from dotenv import load_dotenv
 
 from lta_datamall import LTADataMallClient, LTADataMallEndpoints
+from hawker_finder import HawkerInfoFinder
 
 class HawkerCrowdPredictor:
     """Predicts crowd levels at hawker centers using LTA DataMall API data.
@@ -487,34 +488,44 @@ class HawkerCrowdPredictor:
 def train_and_save_model():
     """Train and save the hawker crowd prediction model using real-world data patterns."""
     load_dotenv()
-    
+
     lta_api_key = os.getenv("LTA_DATAMALL_API_KEY")
     mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-    
+    google_api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+
     # Initialize the predictor
     predictor = HawkerCrowdPredictor(
         lta_api_key=lta_api_key,
         mongo_uri=mongo_uri
     )
-    
+
+    # Initialize HawkerInfoFinder if needed
+    hawker_finder = None
+    if google_api_key:
+        hawker_finder = HawkerInfoFinder(google_api_key)
+
     # Collect training data based on real-world patterns
     print("Collecting training data based on real-world patterns...")
-    training_data = predictor.collect_real_training_data(days=14, samples_per_day=8)
-    
-    # Save the training data to CSV for inspection
-    training_data.to_csv("hawker_training_data.csv", index=False)
-    print("Training data saved to hawker_training_data.csv")
-    
-    # Train the model
-    print("Training model with real-world data patterns...")
-    predictor.train_model(training_data)
-    
-    # Save the model
-    model_path = "hawker_crowd_model.pkl"
-    print(f"Saving model to {model_path}...")
-    predictor.save_model(model_path)
-    
-    print("Model training and saving completed using real-world data patterns.")
+    try:
+        training_data = predictor.collect_real_training_data(days=14, samples_per_day=8)
+        
+        # Save the training data to CSV for inspection
+        training_data.to_csv("hawker_training_data.csv", index=False)
+        print("Training data saved to hawker_training_data.csv")
+        
+        # Train the model
+        print("Training model with real-world data patterns...")
+        predictor.train_model(training_data)
+        
+        # Save the model
+        model_path = "hawker_crowd_model.pkl"
+        print(f"Saving model to {model_path}...")
+        predictor.save_model(model_path)
+        
+        print("Model training and saving completed using real-world data patterns.")
+    except Exception as e:
+        print(f"Error during model training: {e}")
+        raise
 
 if __name__ == "__main__":
     train_and_save_model()
