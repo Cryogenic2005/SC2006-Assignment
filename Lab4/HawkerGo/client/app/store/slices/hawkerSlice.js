@@ -1,15 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { API_URL } from '../../constants/api';
+import { API_BASE_URL } from '../../constants/api';
 
 // Get all hawker centers
 export const getHawkers = createAsyncThunk(
   'hawkers/getHawkers',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/hawkers`);
+      const res = await axios.get(`${API_BASE_URL}/api/hawkers`);
       return res.data;
     } catch (err) {
+      console.error('Error fetching hawkers:', err);
       return rejectWithValue(err.response.data.msg);
     }
   }
@@ -20,7 +21,7 @@ export const getHawkerById = createAsyncThunk(
   'hawkers/getHawkerById',
   async (hawkerId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/hawkers/${hawkerId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/hawkers/${hawkerId}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
@@ -33,7 +34,7 @@ export const getStallsByHawker = createAsyncThunk(
   'hawkers/getStallsByHawker',
   async (hawkerId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/stalls/hawker/${hawkerId}`);
+      const res = await axios.get(`${API_BASE_URL}/api/stalls/hawker/${hawkerId}`);
       return { hawkerId, stalls: res.data };
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
@@ -46,7 +47,7 @@ export const getCrowdLevels = createAsyncThunk(
   'hawkers/getCrowdLevels',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/api/crowds`);
+      const res = await axios.get(`${API_BASE_URL}/api/crowds`);
       
       // Convert array to object with hawkerId as key
       const crowdData = {};
@@ -81,7 +82,7 @@ export const reportCrowdLevel = createAsyncThunk(
       
       const body = { hawkerId, level };
       
-      await axios.post(`${API_URL}/api/crowds`, body, config);
+      await axios.post(`${API_BASE_URL}/api/crowds`, body, config);
       
       return { hawkerId, level };
     } catch (err) {
