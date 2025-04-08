@@ -60,7 +60,7 @@ def train_model():
     """Train the ML model."""
     print("Starting model training process...")
     try:
-        from hawker_crowd_model import train_and_save_model
+        from model import train_and_save_model
         train_and_save_model()
         print("✅ Model training completed successfully.")
     except Exception as e:
