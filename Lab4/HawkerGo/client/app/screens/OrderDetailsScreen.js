@@ -11,9 +11,12 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [queuePosition, setQueuePosition] = useState(null);
+<<<<<<< HEAD
   const [previousStatus, setPreviousStatus] = useState(null);
   const [statusChangeVisible, setStatusChangeVisible] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+=======
+>>>>>>> a181aa7e53f467a9ad88c9e24da2af62c8843c97
   const auth = useSelector(state => state.auth);
   const { token } = auth;
 
