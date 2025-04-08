@@ -28,6 +28,11 @@ class LTADataMallClient:
 
     def fetch(self, endpoint: Endpoint, params: dict = {}, amount: int = None) -> dict:
         """Fetches data from the LTA DataMall API using the given endpoint and parameters.
+        The amount parameter specifies the number of records to fetch and will be used for
+        repeated requests if the endpoint supports pagination.
+        
+        Note that to avoid catastrophic API usage, the maximum number of requests is limited to 200,
+        equivalent to fetching 100,000 records; after which the function will return all data fetched.
 
         Args:
             endpoint (str): The endpoint to fetch data from.
@@ -78,7 +83,7 @@ class LTADataMallClient:
             params['$skip'] = offset + count
             
             request_count += 1
-            if request_count > 50: # Limit the number of requests to prevent infinite loops
+            if request_count > 200: # Limit the number of requests to prevent infinite loops
                 break
             
             if retrieved_count == 0: # No more data to fetch, exit the loop early
