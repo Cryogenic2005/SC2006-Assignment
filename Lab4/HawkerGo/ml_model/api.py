@@ -1,132 +1,209 @@
-from flask import Flask, request, jsonify
 import os
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from pymongo import MongoClient
+from geopy.distance import geodesic
+import time
+
 from model import HawkerCrowdPredictor
 
 # Load environment variables
 load_dotenv()
 
-# Get LTA API key from environment
-LTA_API_KEY = os.getenv('LTA_API_KEY')
-
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Initialize model
+# Initialize MongoDB connection
+mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+mongo_client = MongoClient(mongo_uri)
+db = mongo_client["hawkergo"]
+
+# Initialize HawkerCrowdPredictor
+lta_api_key = os.getenv("LTA_DATAMALL_API_KEY")
 model_path = "hawker_crowd_model.pkl"
-predictor = None
+predictor = HawkerCrowdPredictor(
+    lta_api_key=lta_api_key,
+    mongo_uri=mongo_uri,
+    model_path=model_path
+)
 
-def init_model():
-    global predictor
-    predictor = HawkerCrowdPredictor(LTA_API_KEY, model_path)
-    
-    # If model doesn't exist, we'll train a new one
-    if not os.path.exists(model_path):
-        print("Training new model...")
-        
-        # Define hawker centers with their mappings to carparks and bus stops
-        hawker_centers_data = {
-            "HC001": {  # Old Airport Road Food Centre
-                "name": "Old Airport Road Food Centre",
-                "carparks": ["CP001", "CP002"],
-                "bus_stops": ["83059", "83051"]
-            },
-            "HC002": {  # Maxwell Food Centre
-                "name": "Maxwell Food Centre",
-                "carparks": ["CP003", "CP004"],
-                "bus_stops": ["03223", "03239"]
-            },
-            "HC003": {  # Tekka Centre
-                "name": "Tekka Centre",
-                "carparks": ["CP005"],
-                "bus_stops": ["08057", "08069"]
-            }
-        }
-        
-        # Update the mappings in the model
-        predictor.update_mappings(hawker_centers_data)
-        
-        # Generate synthetic training data
-        print("Generating synthetic training data...")
-        hawker_centers = list(hawker_centers_data.keys())
-        training_data = predictor.generate_synthetic_training_data(hawker_centers, num_samples=2000)
-        
-        # Train the model
-        print("Training model...")
-        predictor.train_model(training_data)
-        
-        # Save the model
-        print("Saving model...")
-        predictor.save_model(model_path)
+@app.route('/api/hawkers', methods=['GET'])
+def get_hawkers():
+    """Get all hawker centers or filter by postal code."""
+    postal_code = request.args.get('postal_code')
 
-# Initialize model at startup
-init_model()
+    if postal_code:
+        # Filter hawkers by postal code prefix (first 2 digits)
+        postal_prefix = postal_code[:2] if len(postal_code) >= 2 else postal_code
+        query = {"postal_code": {"$regex": f"^{postal_prefix}"}}
+        hawkers = list(db["hawker_centers"].find(query, {"_id": 0}))
+    else:
+        # Get all hawkers
+        hawkers = list(db["hawker_centers"].find({}, {"_id": 0}))
 
-@app.route('/predict/<hawker_id>', methods=['GET'])
-def predict_crowd(hawker_id):
-    """
-    Predict crowd level for a specific hawker center
-    """
+    return jsonify(hawkers)
+
+@app.route('/api/hawkers/nearby', methods=['GET'])
+def get_nearby_hawkers():
+    """Get hawker centers near a given location."""
+    try:
+        latitude = float(request.args.get('latitude'))
+        longitude = float(request.args.get('longitude'))
+        radius = float(request.args.get('radius', 2000))  # Default 2km radius
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid location parameters"}), 400
+
+    # Get all hawkers
+    hawkers = list(db["hawker_centers"].find({}, {"_id": 0}))
+
+    # Calculate distance and filter by radius
+    nearby_hawkers = []
+    for hawker in hawkers:
+        hawker_lat = hawker.get('latitude')
+        hawker_lng = hawker.get('longitude')
+
+        if hawker_lat is not None and hawker_lng is not None:
+            distance = geodesic(
+                (latitude, longitude),
+                (hawker_lat, hawker_lng)
+            ).meters
+
+            if distance <= radius:
+                hawker['distance'] = round(distance)
+                nearby_hawkers.append(hawker)
+
+    # Sort by distance
+    nearby_hawkers.sort(key=lambda x: x.get('distance', float('inf')))
+
+    return jsonify(nearby_hawkers)
+
+@app.route('/api/hawkers/<hawker_id>/crowd', methods=['GET'])
+def get_hawker_crowd(hawker_id):
+    """Get crowd level prediction for a hawker center."""
     try:
         level, confidence = predictor.predict_crowd(hawker_id)
         return jsonify({
-            'hawker_id': hawker_id,
-            'hawker_name': predictor.hawker_center_mapping.get(hawker_id, {}).get('name', hawker_id),
-            'crowd_level': level,
-            'confidence': float(confidence),
-            'source': 'ml_prediction'
+            "hawker_id": hawker_id,
+            "crowd_level": level,
+            "confidence": confidence,
+            "timestamp": time.time()
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/hawkers/batch-crowd', methods=['POST'])
+def get_batch_crowd():
+    """Get crowd level predictions for multiple hawker centers."""
+    data = request.get_json()
+
+    if not data or not isinstance(data, dict) or 'hawker_ids' not in data:
+        return jsonify({"error": "Invalid request. Expected 'hawker_ids' array."}), 400
+
+    hawker_ids = data.get('hawker_ids', [])
+    results = []
+
+    for hawker_id in hawker_ids:
+        try:
+            level, confidence = predictor.predict_crowd(hawker_id)
+            results.append({
+                "hawker_id": hawker_id,
+                "crowd_level": level,
+                "confidence": confidence
+            })
+        except Exception as e:
+            results.append({
+                "hawker_id": hawker_id,
+                "error": str(e)
+            })
+
+    return jsonify({
+        "results": results,
+        "timestamp": time.time()
+    })
+
+@app.route('/api/postal-codes', methods=['GET'])
+def get_postal_codes():
+    """Get all unique postal codes with hawker centers."""
+    postal_codes = db["hawker_centers"].distinct("postal_code")
+
+    # Filter out None values
+    postal_codes = [code for code in postal_codes if code is not None]
+
+    return jsonify(postal_codes)
+
+# ADDED ROUTES TO MATCH ML_SERVICE.JS
+
+@app.route('/predict/<hawker_id>', methods=['GET'])
+def predict_crowd(hawker_id):
+    """Get crowd level prediction for a hawker center (endpoint for mlService.js)."""
+    try:
+        level, confidence = predictor.predict_crowd(hawker_id)
+        return jsonify({
+            "hawker_id": hawker_id,
+            "crowd_level": level,
+            "confidence": confidence,
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/predict/all', methods=['GET'])
 def predict_all_crowds():
-    """
-    Predict crowd levels for all hawker centers
-    """
+    """Get crowd level predictions for all hawker centers."""
     try:
+        # Get all hawker centers
+        hawkers = list(db["hawker_centers"].find())
         results = []
-        
-        for hc_id in predictor.hawker_center_mapping.keys():
-            level, confidence = predictor.predict_crowd(hc_id)
-            hc_name = predictor.hawker_center_mapping[hc_id].get('name', hc_id)
+
+        for hawker in hawkers:
+            # Use either '_id' or 'id' field based on what's available
+            hawker_id = str(hawker.get("_id", hawker.get("id")))
             
-            results.append({
-                'hawker_id': hc_id,
-                'hawker_name': hc_name,
-                'crowd_level': level,
-                'confidence': float(confidence),
-                'source': 'ml_prediction'
-            })
-            
+            try:
+                level, confidence = predictor.predict_crowd(hawker_id)
+                results.append({
+                    "hawker_id": hawker_id,
+                    "crowd_level": level,
+                    "confidence": confidence
+                })
+            except Exception as e:
+                print(f"Error predicting for hawker {hawker_id}: {str(e)}")
+                results.append({
+                    "hawker_id": hawker_id,
+                    "crowd_level": "Unknown",
+                    "confidence": 0
+                })
+
         return jsonify(results)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/update-mappings', methods=['POST'])
 def update_mappings():
-    """
-    Update the hawker center to carpark/bus stop mappings
-    """
+    """Update hawker center mappings."""
     try:
-        data = request.json
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-            
-        predictor.update_mappings(data)
-        predictor.save_model(model_path)
-        
-        return jsonify({'message': 'Mappings updated successfully'})
+        mappings = request.get_json()
+        # Here you could implement storing the mappings in MongoDB
+        # For now, we'll just acknowledge receipt
+        return jsonify({
+            "status": "success",
+            "message": "Mappings received",
+            "count": len(mappings) if isinstance(mappings, list) else "unknown"
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """
-    Health check endpoint
-    """
-    return jsonify({'status': 'healthy', 'model_loaded': predictor is not None})
+    """API health check endpoint."""
+    return jsonify({
+        "status": "healthy",
+        "timestamp": time.time()
+    })
 
 if __name__ == '__main__':
+    # Start the Flask server
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)

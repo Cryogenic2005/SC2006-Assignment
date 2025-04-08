@@ -54,34 +54,14 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    // Start server
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
-
-
-// Before starting the server, check ML service health
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
   .then(async () => {
     console.log('Connected to MongoDB');
-    
+
     // Check ML service health
     try {
       const mlServiceHealthy = await MLService.checkHealth();
       console.log(`ML Service health check: ${mlServiceHealthy ? 'Healthy' : 'Unhealthy'}`);
-      
+
       // Start scheduled tasks if ML service is healthy
       if (mlServiceHealthy) {
         SchedulerService.startTasks();
@@ -90,7 +70,7 @@ mongoose
     } catch (error) {
       console.warn('ML Service health check failed:', error.message);
     }
-    
+
     // Start server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
