@@ -51,7 +51,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/queues/user/position/${orderId}`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/queues/user/position/${orderId}`, config);
       setQueuePosition(res.data);
       setPositionLoading(false);
     } catch (err) {
@@ -69,7 +69,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         }
       };
 
-      const res = await axios.get(`${API_URL}/api/orders/${orderId}`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
       
       // Check if the status has changed and show notification
       if (order && order.status !== res.data.status) {

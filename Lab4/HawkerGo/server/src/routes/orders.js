@@ -123,50 +123,50 @@ router.get('/user', auth, async (req, res) => {
 // @route   GET api/orders/:id
 // @desc    Get order by ID
 // @access  Private
+// @route   GET api/orders/:id
+// @desc    Get order by ID
+// @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('stall', 'name imageUrl location hawker')
+      .populate('stall', 'name imageUrl location hawker owner') 
       .populate('user', 'name');
 
     if (!order) {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
-    // Check if user owns the order or is the stall owner
-    const stall = await Stall.findById(order.stall._id);
-    if (order.user._id.toString() !== req.user.id && stall.owner.toString() !== req.user.id) {
+    if (
+      order.user._id.toString() !== req.user.id &&
+      order.stall.owner.toString() !== req.user.id
+    ) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
     res.json(order);
   } catch (err) {
     console.error(err.message);
-    
+
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ msg: 'Order not found' });
     }
-    
+
     res.status(500).send('Server Error');
   }
 });
+
 
 // @route   GET api/orders/stall/:stallId
 // @desc    Get all orders for a stall (stall owner only)
 // @access  Private
 router.get('/stall/:stallId', auth, async (req, res) => {
   try {
-    const { stallId } = req.params;
+    const stall = await Stall.findOne({ _id: req.params.stallId, owner: req.user.id });
+    if (!stall) return res.status(401).json({ msg: 'Not authorized' });
 
-    // Verify stall belongs to authenticated stall owner
-    const stall = await Stall.findOne({ _id: stallId, owner: req.user.id });
-    if (!stall) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    const orders = await Order.find({ 
-      stall: stallId,
-      status: { $ne: 'completed' }
+    const orders = await Order.find({
+      stall: req.params.stallId,
+      status: { $in: ['pending', 'preparing', 'ready'] }
     })
       .sort({ created: 1 })
       .populate('user', 'name');
@@ -189,37 +189,34 @@ router.put(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { status } = req.body;
 
     try {
-      const { status } = req.body;
+      let order = await Order.findById(req.params.id).populate('stall', 'owner');
+      if (!order) return res.status(404).json({ msg: 'Order not found' });
 
-      let order = await Order.findById(req.params.id)
-        .populate('stall', 'owner');
+      if (order.stall.owner.toString() !== req.user.id) return res.status(401).json({ msg: 'Not authorized' });
 
-      if (!order) {
-        return res.status(404).json({ msg: 'Order not found' });
-      }
+      const prevStatus = order.status;
+      order.status = status;
+      await order.save();
 
-      // Verify stall belongs to authenticated stall owner
-      if (order.stall.owner.toString() !== req.user.id) {
-        return res.status(401).json({ msg: 'Not authorized' });
-      }
+      // Advance queue only if status is completed or cancelled
+      if ((status === 'completed' || status === 'cancelled') && prevStatus !== status) {
+        const queue = await Queue.findOne({ stall: order.stall._id });
+        if (queue && order.queueNumber >= queue.currentNumber) {
+          const nextOrder = await Order.findOne({
+            stall: order.stall._id,
+            queueNumber: { $gt: queue.currentNumber },
+            status: { $in: ['pending', 'preparing', 'ready'] }
+          }).sort({ queueNumber: 1 });
 
-      // Update queue if order is completed
-      if (status === 'completed' || status === 'cancelled') {
-        const queue = await Queue.findOne({ stall: order.stall._id, status: 'active' });
-        if (queue && status === 'completed') {
-          queue.currentNumber = order.queueNumber;
+          queue.currentNumber = nextOrder ? nextOrder.queueNumber : queue.currentNumber + 1;
           await queue.save();
         }
       }
-
-      // Update order status
-      order.status = status;
-      await order.save();
 
       res.json(order);
     } catch (err) {
@@ -234,23 +231,26 @@ router.put(
 // @access  Private
 router.put('/:id/cancel', auth, async (req, res) => {
   try {
-    let order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ msg: 'Order not found' });
-    }
-
-    // Verify user owns the order
-    if (order.user.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
-    // Only allow cancellation if order is pending
-    if (order.status !== 'pending') {
-      return res.status(400).json({ msg: 'Cannot cancel order that is already being prepared' });
-    }
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ msg: 'Order not found' });
+    if (order.user.toString() !== req.user.id) return res.status(401).json({ msg: 'Not authorized' });
+    if (order.status !== 'pending') return res.status(400).json({ msg: 'Cannot cancel order that is already being processed' });
 
     order.status = 'cancelled';
     await order.save();
+
+    // Advance queue if applicable
+    const queue = await Queue.findOne({ stall: order.stall });
+    if (queue && order.queueNumber === queue.currentNumber) {
+      const nextOrder = await Order.findOne({
+        stall: order.stall,
+        queueNumber: { $gt: queue.currentNumber },
+        status: { $in: ['pending', 'preparing', 'ready'] }
+      }).sort({ queueNumber: 1 });
+
+      queue.currentNumber = nextOrder ? nextOrder.queueNumber : queue.currentNumber + 1;
+      await queue.save();
+    }
 
     res.json({ msg: 'Order cancelled successfully' });
   } catch (err) {

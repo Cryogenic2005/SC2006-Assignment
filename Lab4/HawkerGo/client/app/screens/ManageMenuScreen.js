@@ -34,7 +34,7 @@ const ManageMenuScreen = () => {
     const fetchStallAndMenu = async () => {
       try {
         const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 'x-auth-token': token },
         });
         if (stallRes.data.length > 0) {
           const stall = stallRes.data[0];
@@ -70,7 +70,7 @@ const ManageMenuScreen = () => {
           price: parseFloat(newItem.price),
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 'x-auth-token': token },
         }
       );
       setMenuItems((prev) => [...prev, res.data]);
@@ -94,7 +94,7 @@ const ManageMenuScreen = () => {
   const handleDeleteItem = async (itemId) => {
     try {
       await axios.delete(`${API_BASE_URL}/api/stalls/${stallId}/menu/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'x-auth-token': token },
       });
       setMenuItems((prev) => prev.filter((item) => item._id !== itemId));
       Alert.alert('Deleted', 'Menu item removed.');
