@@ -24,11 +24,6 @@ const HawkersScreen = ({ navigation }) => {
     loadData();
   }, []);
   
-  useEffect(() => {
-    if (hawkers.length > 0) {
-      filterHawkers();
-    }
-  }, [hawkers, search]);
   
   const [userLocation, setUserLocation] = useState(null);
 
@@ -117,13 +112,29 @@ const loadData = async () => {
     <View style={styles.container}>
       <SearchBar
         placeholder="Search hawker centers..."
-        onChangeText={setSearch}
         value={search}
+        onChangeText={(text) => {
+          setSearch(text);
+        
+          if (text.trim() === '') {
+            setFilteredHawkers(hawkers);
+            return;
+          }
+        
+          const matched = hawkers.filter(h =>
+            (h.name && h.name.toLowerCase().includes(text.toLowerCase())) ||
+            (h.address && h.address.toLowerCase().includes(text.toLowerCase()))
+          );
+        
+          setFilteredHawkers(matched);
+        }}
+        
         containerStyle={styles.searchContainer}
         inputContainerStyle={styles.searchInputContainer}
         lightTheme
         round
       />
+
       
       <View style={styles.filterContainer}>
         <Button

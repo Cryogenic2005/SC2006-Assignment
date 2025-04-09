@@ -148,7 +148,9 @@ router.post(
       });
 
       const stall = await newStall.save();
-
+      // Add the stall to the hawker's list of stalls
+      hawker.stalls.push(stall._id);
+      await hawker.save();
       // Update user with stall information
       user.stallId = stall._id;
       await user.save();
@@ -160,6 +162,44 @@ router.post(
     }
   }
 );
+
+// @route   DELETE api/stalls/:stallId
+// @desc    Delete a stall (stall owner only)
+// @access  Private
+router.delete('/:stallId', auth, async (req, res) => {
+  try {
+    const stall = await Stall.findById(req.params.stallId);
+    if (!stall) {
+      return res.status(404).json({ msg: 'Stall not found' });
+    }
+
+    // Check if current user is the owner
+    if (stall.owner.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    // Remove from hawker's stall list
+    await Hawker.findByIdAndUpdate(stall.hawker, {
+      $pull: { stalls: stall._id },
+    });
+
+    // Clear stall reference from user
+    await User.findByIdAndUpdate(req.user.id, {
+      $unset: { stallId: 1 },
+    });
+
+    // Delete associated menu items
+    await MenuItem.deleteMany({ stall: stall._id });
+
+    // Delete the stall
+    await stall.deleteOne();
+
+    res.json({ msg: 'Stall successfully removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 // @route   PUT api/stalls/:id
 // @desc    Update stall (stall owner only)
@@ -594,6 +634,50 @@ router.get('/:stallId/ratings', async (req, res) => {
     res.json({
       ratings: stall.ratings,
       averageRating: stall.averageRating
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/stalls/:stallId/analytics
+// @desc    Get analytics summary for a stall
+// @access  Private
+router.get('/:stallId/analytics', auth, async (req, res) => {
+  try {
+    const stall = await Stall.findById(req.params.stallId);
+    if (!stall) {
+      return res.status(404).json({ msg: 'Stall not found' });
+    }
+
+    // Ensure the stall belongs to the current user
+    if (stall.owner.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    // Simulated visit count from reviews
+    const totalVisits = stall.ratings.length || 0;
+
+    // Optional: Add logic if order data is available for real revenue
+    const totalRevenue = stall.orders ? stall.orders.reduce((acc, o) => acc + o.totalPrice, 0) : 0;
+
+    // Fetch menu item count
+    const menuItemCount = await MenuItem.countDocuments({ stall: stall._id });
+
+    // Calculate number of operating days with valid times
+    const operatingDays = Object.entries(stall.operatingHours || {}).filter(
+      ([_, time]) => time.open && time.close
+    ).length;
+
+    res.json({
+      stallName: stall.name,
+      totalVisits,
+      totalRevenue,
+      rating: stall.averageRating || 0,
+      reviewCount: stall.ratings?.length || 0,
+      menuItemCount,
+      operatingDays,
     });
   } catch (err) {
     console.error(err.message);
