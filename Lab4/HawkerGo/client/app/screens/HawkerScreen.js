@@ -5,6 +5,7 @@ import { SearchBar, Button } from 'react-native-elements';
 import { getHawkers, getCrowdLevels } from '../store/slices/hawkerSlice';
 import { getUserPreferences } from '../store/slices/preferencesSlice';
 import { getRecommendations } from '../services/recommendationService';
+import { getCurrentLocation, getNearbyHawkers } from '../services/locationService'; 
 import HawkerCard from '../components/HawkerCard';
 
 const HawkersScreen = ({ navigation }) => {
@@ -74,6 +75,20 @@ const HawkersScreen = ({ navigation }) => {
       setIsRecommending(false);
     }
   };
+
+  //Fetch nearby hawkers from backend
+  const fetchNearbyHawkers = async () => {
+    setRefreshing(true);
+    try {
+      const location = await getCurrentLocation();
+      const nearby = await getNearbyHawkers(location.latitude, location.longitude);
+      setFilteredHawkers(nearby);
+    } catch (error) {
+      console.error('Error fetching nearby hawkers:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   const renderHawkerCard = ({ item }) => {
     return (
@@ -131,6 +146,20 @@ const HawkersScreen = ({ navigation }) => {
             color: '#3498db',
           }}
           iconRight
+        />
+
+        <Button
+            title="Nearby"
+            type="clear"
+            titleStyle={{ color: '#2ecc71' }}
+            onPress={fetchNearbyHawkers}
+            icon={{
+              name: 'map-marker',
+              type: 'font-awesome',
+              size: 15,
+              color: '#2ecc71',
+            }}
+            iconRight
         />
       </View>
       

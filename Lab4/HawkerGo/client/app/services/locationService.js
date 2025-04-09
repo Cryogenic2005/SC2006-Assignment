@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { LTA_API_KEY } from '../constants/constants';
+import {API_BASE_URL} from '../constants/api';
 
 // Check location permissions
 export const checkLocationPermission = async () => {
@@ -162,6 +163,19 @@ export const calculateRoute = async (startLat, startLng, endLat, endLng) => {
     return routes;
   } catch (error) {
     console.error('Error calculating route:', error);
+    throw error;
+  }
+};
+
+export const getNearbyHawkers = async (latitude, longitude) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/location/nearby-hawkers`, {
+      latitude,
+      longitude
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching nearby hawkers:', error);
     throw error;
   }
 };

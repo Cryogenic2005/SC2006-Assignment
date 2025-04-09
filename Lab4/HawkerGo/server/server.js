@@ -12,6 +12,8 @@ const orderRoutes = require('./src/routes/orders');
 const queueRoutes = require('./src/routes/queues');
 const loyaltyRoutes = require('./src/routes/loyalty');
 const crowdRoutes = require('./src/routes/crowds');
+const locationRoutes = require('./src/routes/location');
+
 
 // Initialize app
 const app = express();
@@ -29,6 +31,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/queues', queueRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/crowd', crowdRoutes);
+app.use('/api/location', locationRoutes); 
 
 // Services
 const MLService = require('./src/services/mlService');
