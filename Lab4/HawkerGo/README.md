@@ -1,5 +1,34 @@
 # For Developers: How to Set Up This Project
 
+## ML Model Setup
+
+1. Open a terminal and navigate to `ml_model` folder:
+   ```bash
+   cd Lab4/HawkerGo/ml_model
+   ```
+2. Install required packages
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Start the ML Model Server
+   ```bash
+   python api.py
+   ```
+4. If you see the following output, the server is up and running
+   ```
+   Model loaded from hawker_crowd_model.pkl
+   * Serving Flask app 'api'
+   * Debug mode: on
+   WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+   * Running on all addresses (0.0.0.0)
+   * Running on http://127.0.0.1:5001
+   * Running on http://10.91.100.104:5001
+   Press CTRL+C to quit
+   * Restarting with stat
+   Model loaded from hawker_crowd_model.pkl
+   * Debugger is active!
+   ```
+
 ## Backend Setup
 
 1. Add the `.env` file to the `server` directory.
@@ -24,7 +53,10 @@
 5. If you see the following output:
 
    ```
+   ML Service initialized with base URL: http://localhost:5001
    Connected to MongoDB
+   ML Service health check: Healthy
+   Scheduled tasks started
    Server running on port 3000
    ```
 
