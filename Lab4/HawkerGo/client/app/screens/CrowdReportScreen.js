@@ -7,29 +7,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 
 // Mock data for crowd levels when ML model fails
-const MOCK_CROWD_DATA = {
-  'Low': {
-    '1': 'Low',
-    '2': 'Low',
-    '3': 'Low',
-    '4': 'Low',
-    '5': 'Low'
-  },
-  'Medium': {
-    '1': 'Medium',
-    '2': 'Medium',
-    '3': 'High',
-    '4': 'Medium',
-    '5': 'Medium'
-  },
-  'High': {
-    '1': 'High',
-    '2': 'High',
-    '3': 'High',
-    '4': 'Medium',
-    '5': 'High'
-  }
-};
+const MOCK_CROWD_LEVELS = ['Low', 'Medium', 'High'];
 
 const CrowdReportScreen = ({ route, navigation }) => {
   const [currentCrowd, setCurrentCrowd] = useState('Unknown');
@@ -53,9 +31,8 @@ const CrowdReportScreen = ({ route, navigation }) => {
       
       // If ML model is not loaded, the data will be null or undefined
       if (!res.data || !res.data.level) {
-        // Use mock data based on hawker ID last digit
-        const lastDigit = hawkerId.slice(-1);
-        const mockLevel = Object.keys(MOCK_CROWD_DATA)[parseInt(lastDigit) % 3];
+        // Use random mock crowd level
+        const mockLevel = MOCK_CROWD_LEVELS[Math.floor(Math.random() * MOCK_CROWD_LEVELS.length)];
         setCurrentCrowd(mockLevel);
       } else {
         setCurrentCrowd(res.data.level);
@@ -83,9 +60,8 @@ const CrowdReportScreen = ({ route, navigation }) => {
     } catch (err) {
       console.error('Error fetching crowd data:', err);
       
-      // Use mock data based on hawker ID last digit
-      const lastDigit = hawkerId.slice(-1);
-      const mockLevel = Object.keys(MOCK_CROWD_DATA)[parseInt(lastDigit) % 3];
+      // Use random mock crowd level
+      const mockLevel = MOCK_CROWD_LEVELS[Math.floor(Math.random() * MOCK_CROWD_LEVELS.length)];
       setCurrentCrowd(mockLevel);
       
       setLoading(false);
