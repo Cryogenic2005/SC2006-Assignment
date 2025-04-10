@@ -27,6 +27,19 @@ export const register = createAsyncThunk(
   }
 );
 
+export const socialLogin = createAsyncThunk(
+  'auth/socialLogin',
+  async ({ provider, token, email, name }, thunkAPI) => {
+    try {
+      const response = await authService.socialLogin(provider, token, email, name);
+      await AsyncStorage.setItem('token', response.token);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data || { message: 'Social login failed' });
+    }
+  }
+);
+
 export const logout = createAsyncThunk('auth/logout', async () => {
   await AsyncStorage.removeItem('token');
 });
@@ -81,6 +94,22 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.errorMessage = action.payload?.message || 'Registration failed';
+      })
+      .addCase(socialLogin.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(socialLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.token = action.payload.token;
+      })
+      .addCase(socialLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload?.message || 'Social login failed';
+        state.user = null;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;

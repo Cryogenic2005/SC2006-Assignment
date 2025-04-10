@@ -41,7 +41,7 @@ export const USER_TYPES = {
 
 // Stall category types
 export const STALL_CATEGORIES = [
-  'Chinese', 'Malay', 'Indian', 'Western', 'Japanese', 
+  'Chinese', 'Malay', 'Indian', 'Western', 'Japanese',
   'Korean', 'Thai', 'Vietnamese', 'Vegetarian', 'Seafood', 'Dessert'
 ];
 
@@ -57,3 +57,18 @@ export const DIET_TYPES = {
 export const SPICE_LEVELS = [
   'Not Spicy', 'Mild', 'Medium', 'Spicy', 'Very Spicy'
 ];
+
+// Default export all constants as a single object
+export default {
+  API_URL,
+  LTA_API_KEY,
+  MAPBOX_API_KEY,
+  EVENT_TYPES,
+  CROWD_LEVELS,
+  ORDER_STATUS,
+  QUEUE_STATUS,
+  USER_TYPES,
+  STALL_CATEGORIES,
+  DIET_TYPES,
+  SPICE_LEVELS
+};

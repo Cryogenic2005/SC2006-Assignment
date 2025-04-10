@@ -16,7 +16,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Initialize MongoDB connection
-mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+mongo_uri = os.getenv("MONGO_DB", "mongodb://localhost:27017/")
 mongo_client = MongoClient(mongo_uri)
 db = mongo_client["hawkergo"]
 
