@@ -26,7 +26,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/crowds/${hawkerId}`);
       setCurrentCrowd(res.data.level);
-      
+
       // Check if user has reported recently
       if (token) {
         const config = {
@@ -34,17 +34,17 @@ const CrowdReportScreen = ({ route, navigation }) => {
             'x-auth-token': token
           }
         };
-        
+
         const userReportRes = await axios.get(
           `${API_BASE_URL}/api/crowds/user-status/${hawkerId}`,
           config
         );
-        
+
         if (userReportRes.data.recentlyReported) {
           setRecentlyReported(true);
         }
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching crowd data:', err);
@@ -94,7 +94,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
       
       // Refresh crowd data
       fetchCrowdData();
-      
+
       Alert.alert('Thank You!', 'Your crowd report has been submitted.');
     } catch (err) {
       setSubmitting(false);
