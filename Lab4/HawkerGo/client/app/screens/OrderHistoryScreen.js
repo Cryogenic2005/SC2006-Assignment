@@ -1,5 +1,6 @@
 // screens/OrderHistoryScreen.js
 import React, { useState, useEffect } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { Card, Button, Badge } from 'react-native-elements';
@@ -13,6 +14,7 @@ const OrderHistoryScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const auth = useSelector(state => state.auth);
   const { token } = auth;
+  const isFocused = useIsFocused();
 
   const fetchOrders = async () => {
     try {
@@ -34,8 +36,10 @@ const OrderHistoryScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
+    if (!isFocused) return;
+
     fetchOrders();
-  }, []);
+  }, [isFocused]);
 
   const onRefresh = () => {
     setRefreshing(true);
