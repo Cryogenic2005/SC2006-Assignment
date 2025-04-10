@@ -91,16 +91,18 @@ const HawkersScreen = ({ navigation }) => {
   };
   
   const renderHawkerCard = ({ item }) => {
+    const crowdData = crowdLevels[item._id] || {};
     return (
       <HawkerCard
         hawker={item}
-        crowdLevel={crowdLevels[item._id]?.level || 'Unknown'}
+        crowdLevel={crowdData.level || 'Unknown'}
+        isMockData={crowdData.isMock || false}
         distance={Math.random() * 2}  // Placeholder for distance, initially { item.distance }, but
                                       // no such data returned from the API. We should calculate it
                                       // based on the user's location instead.
-        onPress={() => navigation.navigate('HawkerDetail', { 
+        onPress={() => navigation.navigate('HawkerDetail', {
           hawkerId: item._id,
-          hawkerName: item.name 
+          hawkerName: item.name
         })}
       />
     );

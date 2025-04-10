@@ -45,10 +45,21 @@ export const getStallsByHawker = createAsyncThunk(
 // Get crowd levels for all hawker centers
 export const getCrowdLevels = createAsyncThunk(
   'hawkers/getCrowdLevels',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/crowds`);
-      
+      // Try both /api/crowd and /api/crowds endpoints
+      let res;
+      try {
+        res = await axios.get(`${API_BASE_URL}/api/crowd`);
+      } catch (error) {
+        console.log('Trying alternate endpoint...');
+        try {
+          res = await axios.get(`${API_BASE_URL}/api/crowds`);
+        } catch (innerError) {
+          throw new Error('Both crowd data endpoints failed');
+        }
+      }
+
       // Convert array to object with hawkerId as key
       const crowdData = {};
       res.data.forEach(item => {
@@ -58,10 +69,33 @@ export const getCrowdLevels = createAsyncThunk(
           validated: item.validated
         };
       });
-      
+
       return crowdData;
     } catch (err) {
-      return rejectWithValue(err.response.data.msg);
+      console.error('Error fetching crowd data:', err);
+      
+      // If both endpoints fail, create mock data
+      const { hawkers } = getState().hawkers;
+      if (hawkers && hawkers.length > 0) {
+        console.log('Generating mock crowd data as fallback');
+        const mockCrowdLevels = {};
+        const levels = ['Low', 'Medium', 'High'];
+        
+        hawkers.forEach(hawker => {
+          // Generate random level for each hawker
+          const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+          mockCrowdLevels[hawker._id] = {
+            level: randomLevel,
+            timestamp: new Date().toISOString(),
+            validated: false,
+            isMock: true
+          };
+        });
+        
+        return mockCrowdLevels;
+      }
+      
+      return rejectWithValue(err.message || 'Failed to fetch crowd data');
     }
   }
 );
@@ -72,18 +106,18 @@ export const reportCrowdLevel = createAsyncThunk(
   async ({ hawkerId, level }, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      
+
       const config = {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token
         }
       };
-      
+
       const body = { hawkerId, level };
-      
-      await axios.post(`${API_BASE_URL}/api/crowds`, body, config);
-      
+
+      await axios.post(`${API_BASE_URL}/api/crowd`, body, config);
+
       return { hawkerId, level };
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
