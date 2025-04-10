@@ -30,8 +30,9 @@ export default {
     favicon: "./assets/images/favicon.png"
   },
   extra: {
-    // You only need these two credentials for development
-    googleClientId: "714013846272-kk0userh1l0eu63ae4jgmjkulmluk4gk.apps.googleusercontent.com",
+    // You need both web and iOS client IDs
+    googleWebClientId: "714013846272-kk0userh1l0eu63ae4jgmjkulmluk4gk.apps.googleusercontent.com",
+    googleIosClientId: "714013846272-i9vbb2rrdnjpj0r7e2lafv15bna035cc.apps.googleusercontent.com",
     facebookAppId: "YOUR_FACEBOOK_APP_ID",
   }
 };

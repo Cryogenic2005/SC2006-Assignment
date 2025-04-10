@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, reset, socialLogin } from '../../store/slices/authSlice';
@@ -27,13 +28,18 @@ const LoginScreen = ({ navigation }) => {
   const { isLoading, isError, isSuccess, errorMessage } = useSelector((state) => state.auth);
   const [socialLoading, setSocialLoading] = useState(false);
 
-  // Get simplified configuration from app.config.js
-  const googleClientId = Constants.expoConfig?.extra?.googleClientId;
+  // Get configuration from app.config.js
+  const googleWebClientId = Constants.expoConfig?.extra?.googleWebClientId;
+  const googleIosClientId = Constants.expoConfig?.extra?.googleIosClientId;
   const facebookAppId = Constants.expoConfig?.extra?.facebookAppId;
 
-  // Simplified Google Auth - using just one client ID for all platforms
+  // Google Auth with web and iOS client IDs
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    expoClientId: googleClientId,
+    expoClientId: googleWebClientId,
+    iosClientId: googleIosClientId,
+    webClientId: googleWebClientId,
+    // Use host.exp.exponent as the iOS bundle ID for Expo Go
+    iosBundleId: 'host.exp.exponent',
   });
 
   // Facebook Auth
@@ -136,7 +142,15 @@ const LoginScreen = ({ navigation }) => {
   const handleGoogleLogin = async () => {
     try {
       setSocialLoading(true);
-      await promptGoogleAsync();
+      console.log('Starting Google login process...');
+      if (!googleRequest) {
+        console.log('Google request object is not ready yet');
+        setSocialLoading(false);
+        return;
+      }
+      
+      const result = await promptGoogleAsync();
+      console.log('Google login prompt result:', result);
     } catch (error) {
       console.error('Google login error:', error);
       setSocialLoading(false);
@@ -147,7 +161,15 @@ const LoginScreen = ({ navigation }) => {
   const handleFacebookLogin = async () => {
     try {
       setSocialLoading(true);
-      await promptFacebookAsync();
+      console.log('Starting Facebook login process...');
+      if (!fbRequest) {
+        console.log('Facebook request object is not ready yet');
+        setSocialLoading(false);
+        return;
+      }
+      
+      const result = await promptFacebookAsync();
+      console.log('Facebook login prompt result:', result);
     } catch (error) {
       console.error('Facebook login error:', error);
       setSocialLoading(false);
