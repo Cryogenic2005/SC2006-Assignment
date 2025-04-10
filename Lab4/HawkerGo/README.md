@@ -2,36 +2,43 @@
 
 ## ML Model Setup
 
-1. Open a terminal and navigate to `ml_model` folder:
+The app will work with estimated crowd levels if the ML service is not running.
+
+1. Set up a Python environment (Python 3.11 recommended)
+
+2. Navigate to the ML model directory:
+
    ```bash
    cd Lab4/HawkerGo/ml_model
    ```
-2. Install required packages
+
+3. Install the required packages:
+
    ```bash
    pip install -r requirements.txt
    ```
-3. Start the ML Model Server
+
+4. Create a `.env` file in the ml_model directory with:
+
+5. Start the Flask app:
+
    ```bash
    python api.py
    ```
-4. If you see the following output, the server is up and running
-   ```
-   Model loaded from hawker_crowd_model.pkl
-   * Serving Flask app 'api'
-   * Debug mode: on
-   WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
-   * Running on all addresses (0.0.0.0)
-   * Running on http://127.0.0.1:5001
-   * Running on http://10.91.100.104:5001
-   Press CTRL+C to quit
-   * Restarting with stat
-   Model loaded from hawker_crowd_model.pkl
-   * Debugger is active!
-   ```
+
+6. The ML service should start running on port 5000.
 
 ## Backend Setup
 
-1. Add the `.env` file to the `server` directory.
+1. Add the `.env` file to the `server` directory with:
+
+   ```
+   PORT=3000
+   MONGO_URI=mongodb://localhost:27017/hawkergo
+   ML_API_URL=http://localhost:5000
+   JWT_SECRET=your_jwt_secret
+   ```
+
 2. Open a terminal and navigate to the `server` folder:
 
    ```bash
@@ -101,26 +108,27 @@
 
 - After making changes to a file, return to the Expo terminal.
 - Press `r` to refresh the app on your phone and reflect the changes.
+- If you see "Error fetching crowd data", the app will still work but will show estimated crowd levels.
 
 # Running Backend Tests
 
 ## Instructions
 
-1. **Navigate to the tests directory**  
+1. **Navigate to the tests directory**
    In your terminal, move into the `tests` directory:
 
    ```bash
    cd Lab4/HawkerGo/server/tests
    ```
 
-2. **Run the test suite**  
+2. **Run the test suite**
    Execute the following command:
 
    ```bash
    npm test
    ```
 
-3. **Check the logs**  
+3. **Check the logs**
    Review the console output to see:
    - Which tests passed
    - Which tests failed
@@ -137,21 +145,21 @@
 
 ## Instructions
 
-1. **Navigate to the client/tests directory**  
+1. **Navigate to the client/tests directory**
    In your terminal, move into the `__tests__` directory:
 
    ```bash
    cd Lab4/HawkerGo/client/__tests__
    ```
 
-2. **Run the test suite**  
+2. **Run the test suite**
    Execute the following command:
 
    ```bash
    npm test
    ```
 
-3. **Check the logs**  
+3. **Check the logs**
    Review the console output to see:
    - Which tests passed
    - Which tests failed

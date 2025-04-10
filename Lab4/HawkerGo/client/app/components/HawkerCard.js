@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Card, Badge, Icon } from 'react-native-elements';
 
-const HawkerCard = ({ hawker, crowdLevel, distance, onPress }) => {
+const HawkerCard = ({ hawker, crowdLevel, distance, onPress, isMockData }) => {
   const getCrowdLevelColor = (level) => {
     switch (level) {
       case 'Low': return '#2ecc71';
@@ -16,8 +16,8 @@ const HawkerCard = ({ hawker, crowdLevel, distance, onPress }) => {
     <TouchableOpacity onPress={onPress}>
       <Card containerStyle={styles.card}>
         {hawker.imageUrl ? (
-          <Image 
-            source={{ uri: hawker.imageUrl }} 
+          <Image
+            source={{ uri: hawker.imageUrl }}
             style={styles.image}
             resizeMode="cover"
           />
@@ -26,17 +26,17 @@ const HawkerCard = ({ hawker, crowdLevel, distance, onPress }) => {
             <Icon name="restaurant" size={40} color="#bdc3c7" />
           </View>
         )}
-        
+
         <View style={styles.contentContainer}>
           <Text style={styles.name}>{hawker.name}</Text>
           <Text style={styles.address} numberOfLines={2}>{hawker.address}</Text>
-          
+
           <View style={styles.infoContainer}>
             {crowdLevel && (
               <View style={styles.infoItem}>
                 <Badge
-                  value={crowdLevel}
-                  badgeStyle={{ 
+                  value={isMockData ? `${crowdLevel} (Est.)` : crowdLevel}
+                  badgeStyle={{
                     backgroundColor: getCrowdLevelColor(crowdLevel),
                     paddingHorizontal: 8,
                     marginRight: 5
@@ -45,18 +45,18 @@ const HawkerCard = ({ hawker, crowdLevel, distance, onPress }) => {
                 />
               </View>
             )}
-            
+
             {distance != null && (
               <View style={styles.infoItem}>
                 <Icon name="place" size={16} color="#7f8c8d" />
                 <Text style={styles.infoText}>
-                  {distance < 1 
-                    ? `${Math.round(distance * 1000)}m` 
+                  {distance < 1
+                    ? `${Math.round(distance * 1000)}m`
                     : `${distance.toFixed(1)}km`}
                 </Text>
               </View>
             )}
-            
+
             <View style={styles.infoItem}>
               <Icon name="store" size={16} color="#7f8c8d" />
               <Text style={styles.infoText}>

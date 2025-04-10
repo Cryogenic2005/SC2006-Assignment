@@ -18,15 +18,15 @@ export const checkLocationPermission = async () => {
 export const getCurrentLocation = async () => {
   try {
     const hasPermission = await checkLocationPermission();
-    
+
     if (!hasPermission) {
       throw new Error('Location permission not granted');
     }
-    
+
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced
     });
-    
+
     return {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude
@@ -63,11 +63,11 @@ export const getNearbyBusStops = async (latitude, longitude, radius = 0.5) => {
         'AccountKey': LTA_API_KEY
       }
     };
-    
+
     const res = await axios.get('http://datamall2.mytransport.sg/ltaodataservice/BusStops', config);
-    
+
     const busStops = res.data.value;
-    
+
     // Filter bus stops by proximity
     const nearbyBusStops = busStops.filter(stop => {
       const distance = calculateDistance(
@@ -76,10 +76,10 @@ export const getNearbyBusStops = async (latitude, longitude, radius = 0.5) => {
         stop.Latitude,
         stop.Longitude
       );
-      
+
       return distance <= radius;
     });
-    
+
     // Sort by proximity
     nearbyBusStops.sort((a, b) => {
       const distA = calculateDistance(
@@ -88,17 +88,17 @@ export const getNearbyBusStops = async (latitude, longitude, radius = 0.5) => {
         a.Latitude,
         a.Longitude
       );
-      
+
       const distB = calculateDistance(
         latitude,
         longitude,
         b.Latitude,
         b.Longitude
       );
-      
+
       return distA - distB;
     });
-    
+
     return nearbyBusStops;
   } catch (error) {
     console.error('Error getting nearby bus stops:', error);
@@ -114,12 +114,12 @@ export const getBusArrivals = async (busStopCode) => {
         'AccountKey': LTA_API_KEY
       }
     };
-    
+
     const res = await axios.get(
       `http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=${busStopCode}`,
       config
     );
-    
+
     return res.data.Services;
   } catch (error) {
     console.error('Error getting bus arrivals:', error);
@@ -132,9 +132,9 @@ export const calculateRoute = async (startLat, startLng, endLat, endLng) => {
   try {
     // Note: In a real implementation, you would use a routing API like Google Maps or Mapbox
     // For simplicity, we'll just calculate the direct distance here
-    
+
     const distance = calculateDistance(startLat, startLng, endLat, endLng);
-    
+
     // Mock route data
     const routes = [
       {
@@ -145,7 +145,7 @@ export const calculateRoute = async (startLat, startLng, endLat, endLng) => {
         polyline: [] // Would contain route coordinates in real implementation
       }
     ];
-    
+
     // Add public transport option if distance is more than 1km
     if (distance > 1) {
       routes.push({
@@ -159,7 +159,7 @@ export const calculateRoute = async (startLat, startLng, endLat, endLng) => {
         ]
       });
     }
-    
+
     return routes;
   } catch (error) {
     console.error('Error calculating route:', error);
@@ -179,3 +179,16 @@ export const getNearbyHawkers = async (latitude, longitude) => {
     throw error;
   }
 };
+
+// Create a default export with all the location service functions
+const locationService = {
+  checkLocationPermission,
+  getCurrentLocation,
+  calculateDistance,
+  getNearbyBusStops,
+  getBusArrivals,
+  calculateRoute,
+  getNearbyHawkers
+};
+
+export default locationService;

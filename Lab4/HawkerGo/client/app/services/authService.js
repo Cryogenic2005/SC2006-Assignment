@@ -20,11 +20,14 @@ const register = async (name, email, password, userType) => {
   return response.data;
 };
 
-const socialLogin = async (provider, token) => {
+const socialLogin = async (provider, token, email, name) => {
   const response = await axios.post(`${API_BASE_URL}/api/auth/social-login`, {
     provider,
     token,
+    email,
+    name
   });
+  console.log('Social login response for debugging:', response.data);
   return response.data;
 };
 

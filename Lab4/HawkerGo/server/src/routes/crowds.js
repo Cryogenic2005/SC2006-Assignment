@@ -3,6 +3,11 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const crowdController = require('../controllers/crowdController');
 
+// @route   GET api/crowd
+// @desc    Get all crowd levels
+// @access  Public
+router.get('/', crowdController.getAllCrowdLevels);
+
 // @route   POST api/crowd
 // @desc    Report crowd level
 // @access  Private

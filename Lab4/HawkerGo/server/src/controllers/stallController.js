@@ -74,6 +74,12 @@ exports.createStall = async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized as a stall owner' });
     }
 
+    // Check if user already owns a stall
+    const existingStall = await Stall.findOne({ owner: req.user.id });
+    if (existingStall) {
+      return res.status(400).json({ msg: 'You already own a stall. Each stall owner is limited to one stall.' });
+    }
+
     const {
       name,
       hawkerId,

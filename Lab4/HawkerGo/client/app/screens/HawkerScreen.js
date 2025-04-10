@@ -117,7 +117,7 @@ const HawkersScreen = ({ navigation }) => {
         distance={distance}  // Now actual distance
         onPress={() => navigation.navigate('HawkerDetail', { 
           hawkerId: item._id,
-          hawkerName: item.name 
+          hawkerName: item.name
         })}
       />
     );

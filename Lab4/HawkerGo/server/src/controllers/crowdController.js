@@ -2,6 +2,69 @@ const Crowd = require('../models/Crowd');
 const Hawker = require('../models/Hawker');
 const MLService = require('../services/mlService');
 
+// Get all crowd levels
+exports.getAllCrowdLevels = async (req, res) => {
+  try {
+    // Get all hawker centers
+    const hawkers = await Hawker.find();
+    
+    // Get the latest crowd report for each hawker
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const results = [];
+
+    for (const hawker of hawkers) {
+      // Find the most recent validated crowd report
+      const crowdData = await Crowd.findOne({
+        hawker: hawker._id,
+        timestamp: { $gt: thirtyMinutesAgo }
+      }).sort({ timestamp: -1 });
+
+      if (crowdData) {
+        results.push({
+          hawker: hawker._id,
+          level: crowdData.level,
+          validated: crowdData.validated,
+          timestamp: crowdData.timestamp,
+          source: crowdData.source || 'user_report'
+        });
+      } else {
+        // Try to get ML prediction for this hawker
+        try {
+          const mlPrediction = await MLService.getPrediction(hawker._id.toString());
+          
+          results.push({
+            hawker: hawker._id,
+            level: mlPrediction.crowd_level,
+            validated: false,
+            timestamp: Date.now(),
+            source: 'ml_prediction'
+          });
+        } catch (mlError) {
+          console.error(`ML prediction failed for hawker ${hawker._id}: ${mlError.message}`);
+          
+          // Generate random crowd level as fallback
+          const levels = ['Low', 'Medium', 'High'];
+          const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+          
+          results.push({
+            hawker: hawker._id,
+            level: randomLevel,
+            validated: false,
+            timestamp: Date.now(),
+            source: 'random_fallback',
+            isMock: true
+          });
+        }
+      }
+    }
+
+    return res.json(results);
+  } catch (err) {
+    console.error('Error getting all crowd levels:', err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
 // Report crowd level
 exports.reportCrowdLevel = async (req, res) => {
   try {
