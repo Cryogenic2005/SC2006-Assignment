@@ -60,7 +60,10 @@ The app will work with estimated crowd levels if the ML service is not running.
 5. If you see the following output:
 
    ```
+   ML Service initialized with base URL: http://localhost:5001
    Connected to MongoDB
+   ML Service health check: Healthy
+   Scheduled tasks started
    Server running on port 3000
    ```
 

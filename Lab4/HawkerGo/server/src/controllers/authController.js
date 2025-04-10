@@ -54,7 +54,7 @@ exports.register = async (req, res) => {
 
 // Login user
 exports.login = async (req, res) => {
-  console.log('Login attempt for debugging:', req.body);
+  console.log('Login attempt for debugging (authController):', req.body);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });

@@ -11,6 +11,8 @@ const OrderScreen = ({ route, navigation }) => {
   const [stall, setStall] = useState(null);
   const auth = useSelector(state => state.auth);
   const { token } = auth;
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   
   useEffect(() => {
     const { stallId } = route.params;
@@ -137,9 +139,15 @@ const OrderScreen = ({ route, navigation }) => {
       <Card containerStyle={styles.stallCard}>
         <Card.Title>{stall.name}</Card.Title>
         <Text style={styles.stallInfo}>{stall.description}</Text>
-        <Text style={styles.stallInfo}>
-          Operating Hours: {stall.operatingHours}
-        </Text>
+        <View>
+          <Text style={styles.stallInfo}>Operating Hours:</Text>
+          {Object.entries(stall.operatingHours).map(([day, hours]) => (
+            <Text key={day} style={styles.stallInfo}>
+              {capitalize(day)}: {hours.open} - {hours.close}
+            </Text>
+          ))}
+        </View>
+
       </Card>
       
       <Text style={styles.sectionTitle}>Menu</Text>

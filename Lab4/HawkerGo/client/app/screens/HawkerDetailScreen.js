@@ -28,6 +28,7 @@ const HawkerDetailScreen = ({ route, navigation }) => {
       try {
         const location = await getCurrentLocation();
         
+        
         setUserLocation(location);
         
         if (currentHawker && currentHawker.location && location) {

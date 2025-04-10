@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { API_URL } from '../../constants/constants';
+import { API_BASE_URL } from '../../constants/api';
 
 // Get user preferences
 export const getUserPreferences = createAsyncThunk(
@@ -15,7 +15,7 @@ export const getUserPreferences = createAsyncThunk(
         }
       };
       
-      const res = await axios.get(`${API_URL}/api/preferences`, config);
+      const res = await axios.get(`${API_BASE_URL}/api/preferences`, config);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
@@ -37,7 +37,7 @@ export const updatePreferences = createAsyncThunk(
         }
       };
       
-      const res = await axios.put(`${API_URL}/api/preferences`, preferencesData, config);
+      const res = await axios.put(`${API_BASE_URL}/api/preferences`, preferencesData, config);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response.data.msg);
