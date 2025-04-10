@@ -3,6 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Card, Badge, Icon } from 'react-native-elements';
 
 const StallCard = ({ stall, onPress }) => {
+  // Ensure stall is a valid object with required properties
+  if (!stall || typeof stall !== 'object') {
+    return null;
+  }
+  
   return (
     <TouchableOpacity onPress={onPress}>
       <Card containerStyle={styles.card}>
@@ -59,13 +64,17 @@ const StallCard = ({ stall, onPress }) => {
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Price Range:</Text>
             <Text style={styles.priceValue}>
-              ${stall.minPrice.toFixed(2)} - ${stall.maxPrice.toFixed(2)}
+              ${stall.minPrice ? stall.minPrice.toFixed(2) : '0.00'} - ${stall.maxPrice ? stall.maxPrice.toFixed(2) : '0.00'}
             </Text>
           </View>
           
           <View style={styles.hoursContainer}>
             <Icon name="access-time" size={14} color="#7f8c8d" />
-            <Text style={styles.hours}>{stall.operatingHours}</Text>
+            <Text style={styles.hours}>
+              {typeof stall.operatingHours === 'string' 
+                ? stall.operatingHours 
+                : 'Opening hours vary'}
+            </Text>
           </View>
         </View>
       </Card>

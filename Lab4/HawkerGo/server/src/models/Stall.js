@@ -106,6 +106,30 @@ const StallSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    minPrice: {
+      type: Number,
+      default: 0,
+    },
+    maxPrice: {
+      type: Number,
+      default: 0,
+    },
+    cuisine: {
+      type: String,
+      trim: true,
+    },
+    isHalal: {
+      type: Boolean,
+      default: false,
+    },
+    isVegetarian: {
+      type: Boolean,
+      default: false,
+    },
+    isVegan: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
