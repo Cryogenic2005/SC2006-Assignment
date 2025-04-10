@@ -61,7 +61,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     }
   };
 
-const fetchOrderDetails = async () => {
+  const fetchOrderDetails = async () => {
     try {
       const config = {
         headers: {
@@ -69,52 +69,31 @@ const fetchOrderDetails = async () => {
         }
       };
 
-      console.log('Fetching order details for orderId:', orderId);
       const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
-
-      console.log('Received order data:', JSON.stringify(res.data, null, 2));
-      console.log('Current order state:', JSON.stringify(order, null, 2));
-
-      // Ensure clean status data
-      const newStatus = (res.data.status || '').toLowerCase().trim();
-      const currentStatus = (order?.status || '').toLowerCase().trim();
-
-      console.log('Current status:', currentStatus);
-      console.log('New status:', newStatus);
-
+      
       // Check if the status has changed and show notification
-      if (order && currentStatus !== newStatus) {
-        console.log('Status change detected');
-        setPreviousStatus(currentStatus);
+      if (order && order.status !== res.data.status) {
+        setPreviousStatus(order.status);
         setStatusChangeVisible(true);
         startPulseAnimation();
-
+        
         // Hide notification after 5 seconds
         setTimeout(() => {
           setStatusChangeVisible(false);
         }, 5000);
       }
-
-      // Create a new order object with safe property access
-      const updatedOrder = {
-        ...res.data,
-        status: newStatus,
-        stall: res.data.stall || order?.stall
-      };
-
-      setOrder(updatedOrder);
+      
+      setOrder(res.data);
       setLoading(false);
 
       // Handle initial actions
-      if (initialAction === 'cancel' && newStatus === 'pending') {
+      if (initialAction === 'cancel' && res.data.status === 'pending') {
         confirmCancelOrder();
       }
     } catch (err) {
       console.error('Error fetching order details:', err);
       setLoading(false);
       Alert.alert('Error', 'Could not load order details');
-    }
-  };
     }
   };
 
