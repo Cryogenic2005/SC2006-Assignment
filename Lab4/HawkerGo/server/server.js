@@ -13,6 +13,7 @@ const queueRoutes = require('./src/routes/queues');
 const loyaltyRoutes = require('./src/routes/loyalty');
 const crowdRoutes = require('./src/routes/crowds');
 const locationRoutes = require('./src/routes/location');
+const preferencesRoutes = require('./src/routes/preferences');
 
 
 // Initialize app
@@ -31,7 +32,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/queues', queueRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/crowd', crowdRoutes);
-app.use('/api/location', locationRoutes); 
+app.use('/api/location', locationRoutes);
+app.use('/api/preferences', preferencesRoutes); 
 
 // Services
 const MLService = require('./src/services/mlService');

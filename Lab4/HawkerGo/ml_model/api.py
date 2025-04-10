@@ -1,10 +1,14 @@
 import os
+import time
+import random
+import hashlib
+from datetime import datetime
+
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
 from geopy.distance import geodesic
-import time
 
 from model import HawkerCrowdPredictor
 
@@ -161,17 +165,47 @@ def get_postal_codes():
 def predict_crowd(hawker_id):
     """Get crowd level prediction for a hawker center (endpoint for mlService.js)."""
     if predictor is None:
-        # Return mock data if predictor isn't initialized
+        # Use consistent mock prediction strategy
         import random
+        import hashlib
         import time
+
+        # Create hash-based seed for consistent randomness
+        hash_obj = hashlib.md5(hawker_id.encode())
+        hash_int = int(hash_obj.hexdigest(), 16)
+        random.seed(hash_int)
+
+        # Levels and their probabilities
         levels = ['Low', 'Medium', 'High']
-        random_level = levels[random.randint(0, 2)]
-        random_confidence = 0.5 + (random.random() * 0.4)  # Between 0.5 and 0.9
+        level_weights = [0.4, 0.4, 0.2]  # More low and medium, less high
+
+        # Get current time for context-aware prediction
+        now = datetime.now()
+        hour = now.hour
+        weekday = now.weekday()
+        is_weekend = weekday >= 5
+
+        # Adjust prediction based on time of day
+        if is_weekend and (11 <= hour <= 14 or 17 <= hour <= 20):
+            # Weekend lunch/dinner - more likely to be high
+            level_weights = [0.1, 0.3, 0.6]
+        elif not is_weekend and (11 <= hour <= 14):
+            # Weekday lunch - medium to high
+            level_weights = [0.2, 0.5, 0.3]
+        elif 17 <= hour <= 20:
+            # Dinner time - more medium
+            level_weights = [0.2, 0.6, 0.2]
+
+        # Choose level based on weighted random selection
+        level = random.choices(levels, weights=level_weights)[0]
         
+        # Generate consistent confidence based on hawker ID
+        confidence = 0.5 + (hash_int % 50) / 100.0  # 0.5 to 1.0
+
         return jsonify({
             "hawker_id": hawker_id,
-            "crowd_level": random_level,
-            "confidence": random_confidence,
+            "crowd_level": level,
+            "confidence": confidence,
             "timestamp": time.time(),
             "source": "mock_prediction"
         })
@@ -186,18 +220,49 @@ def predict_crowd(hawker_id):
         })
     except Exception as e:
         print(f"Error predicting crowd for hawker {hawker_id}: {e}")
-        
-        # Return mock prediction instead of error
+
+        # Fallback to consistent mock prediction
+        # Reusing the mock prediction logic from above
         import random
+        import hashlib
         import time
+
+        # Create hash-based seed for consistent randomness
+        hash_obj = hashlib.md5(hawker_id.encode())
+        hash_int = int(hash_obj.hexdigest(), 16)
+        random.seed(hash_int)
+
+        # Levels and their probabilities
         levels = ['Low', 'Medium', 'High']
-        random_level = levels[random.randint(0, 2)]
-        random_confidence = 0.5 + (random.random() * 0.4)  # Between 0.5 and 0.9
+        level_weights = [0.4, 0.4, 0.2]  # More low and medium, less high
+
+        # Get current time for context-aware prediction
+        now = datetime.now()
+        hour = now.hour
+        weekday = now.weekday()
+        is_weekend = weekday >= 5
+
+        # Adjust prediction based on time of day
+        if is_weekend and (11 <= hour <= 14 or 17 <= hour <= 20):
+            # Weekend lunch/dinner - more likely to be high
+            level_weights = [0.1, 0.3, 0.6]
+        elif not is_weekend and (11 <= hour <= 14):
+            # Weekday lunch - medium to high
+            level_weights = [0.2, 0.5, 0.3]
+        elif 17 <= hour <= 20:
+            # Dinner time - more medium
+            level_weights = [0.2, 0.6, 0.2]
+
+        # Choose level based on weighted random selection
+        level = random.choices(levels, weights=level_weights)[0]
         
+        # Generate consistent confidence based on hawker ID
+        confidence = 0.5 + (hash_int % 50) / 100.0  # 0.5 to 1.0
+
         return jsonify({
             "hawker_id": hawker_id,
-            "crowd_level": random_level,
-            "confidence": random_confidence,
+            "crowd_level": level,
+            "confidence": confidence,
             "timestamp": time.time(),
             "source": "error_fallback"
         })
