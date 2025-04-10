@@ -53,10 +53,7 @@ app.use((err, req, res, next) => {
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('Connected to MongoDB');
 
