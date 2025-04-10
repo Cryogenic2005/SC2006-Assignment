@@ -12,7 +12,7 @@ from lta_datamall import LTADataMallClient, LTADataMallEndpoints
 
 def init_mongodb_connection():
     """Initialize MongoDB connection"""
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+    mongo_uri = os.getenv("MONGO_DB")
     client = MongoClient(mongo_uri)
     db = client["hawkergo"]
     return db
@@ -251,12 +251,12 @@ def main():
         
         hawker_centers_data.append(hawker_data)
     
-    # Store hawker centers data in MongoDB
-    store_hawker_data(db, hawker_centers_data)
-    
     # Export data to JSON file for backup
     with open('hawker_centers_data.json', 'w') as f:
         json.dump(hawker_centers_data, f, indent=2)
+
+    # Store hawker centers data in MongoDB
+    store_hawker_data(db, hawker_centers_data)
     
     print("Data collection completed.")
 
