@@ -33,6 +33,7 @@ export default {
     // You need both web and iOS client IDs
     googleWebClientId: "714013846272-kk0userh1l0eu63ae4jgmjkulmluk4gk.apps.googleusercontent.com",
     googleIosClientId: "714013846272-i9vbb2rrdnjpj0r7e2lafv15bna035cc.apps.googleusercontent.com",
+    googleAndroidClientId: "714013846272-jnbrlcplb8ks8200puc506ukgg4i574g.apps.googleusercontent.com",
     facebookAppId: "YOUR_FACEBOOK_APP_ID",
   }
 };
