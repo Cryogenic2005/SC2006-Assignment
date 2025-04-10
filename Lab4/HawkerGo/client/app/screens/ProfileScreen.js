@@ -189,7 +189,10 @@ const ProfileScreen = ({ navigation }) => {
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.menuItem}
+        >
           <Icon name="settings" color="#7f8c8d" size={24} />
           <Text style={styles.menuItemText}>Settings</Text>
           <Icon name="chevron-right" color="#bdc3c7" size={24} />

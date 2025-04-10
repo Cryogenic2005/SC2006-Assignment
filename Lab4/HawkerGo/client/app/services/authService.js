@@ -31,10 +31,35 @@ const socialLogin = async (provider, token, email, name) => {
   return response.data;
 };
 
+const updateUserSettings = async (token, userData) => {
+  const response = await axios.put(`${API_BASE_URL}/api/users/settings`, userData, {
+    headers: {
+      'x-auth-token': token,
+      'Content-Type': 'application/json'
+    }
+  });
+  return response.data;
+};
+
+const changePassword = async (token, currentPassword, newPassword) => {
+  const response = await axios.put(`${API_BASE_URL}/api/users/change-password`, 
+    { currentPassword, newPassword }, 
+    {
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  return response.data;
+};
+
 const authService = {
   login,
   register,
   socialLogin,
+  updateUserSettings,
+  changePassword,
 };
 
 export default authService;
