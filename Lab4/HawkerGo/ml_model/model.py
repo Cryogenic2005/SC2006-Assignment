@@ -35,7 +35,7 @@ class HawkerCrowdPredictor:
         
         # Set up MongoDB connection
         self.mongo_client = MongoClient(mongo_uri) if mongo_uri else None
-        self.db = self.mongo_client["hawkergo"] if self.mongo_client else None
+        self.db = self.mongo_client["hawkergo"] if self.mongo_client is not None else None
         
         # Initialize model and scaler
         self.model = None
@@ -55,7 +55,7 @@ class HawkerCrowdPredictor:
     
     def get_hawker_center_by_id(self, hawker_center_id):
         """Get hawker center data from MongoDB."""
-        if not self.db:
+        if self.db is None:
             raise ValueError("MongoDB connection not initialized")
         
         collection = self.db["hawker_centers"]
@@ -63,7 +63,7 @@ class HawkerCrowdPredictor:
     
     def get_hawker_centers_by_postal_code(self, postal_code):
         """Get hawker centers by postal code."""
-        if not self.db:
+        if self.db is None:
             raise ValueError("MongoDB connection not initialized")
         
         collection = self.db["hawker_centers"]
@@ -73,7 +73,7 @@ class HawkerCrowdPredictor:
     
     def get_carpark_data(self, carpark_ids):
         """Fetch current carpark availability for given carpark IDs."""
-        if not self.lta_client:
+        if self.lta_client is None:
             raise ValueError("LTA DataMall client not initialized")
         
         # Fetch all carpark data
@@ -91,7 +91,7 @@ class HawkerCrowdPredictor:
     
     def get_bus_arrival_data(self, bus_stop_codes):
         """Fetch current bus arrival info for given bus stops."""
-        if not self.lta_client:
+        if self.lta_client is None:
             raise ValueError("LTA DataMall client not initialized")
         
         bus_data = {}
@@ -304,18 +304,18 @@ class HawkerCrowdPredictor:
     
     def collect_real_training_data(self, days=14, samples_per_day=8):
         """Collect real training data from LTA DataMall for model training.
-        
+
         This function collects actual carpark and bus data over a period of time to
         establish patterns that can be used to infer crowd levels.
-        
+
         Args:
             days (int): Number of days to collect data (historical)
             samples_per_day (int): Number of times per day to collect data
-            
+
         Returns:
             pandas.DataFrame: Real training data based on actual API responses
         """
-        if not self.db:
+        if self.db is None:
             raise ValueError("MongoDB connection not initialized")
             
         collection = self.db["hawker_centers"]
