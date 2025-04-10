@@ -23,27 +23,29 @@ const HawkersScreen = ({ navigation }) => {
   useEffect(() => {
     loadData();
   }, []);
-  
+
+  useEffect(() => {
+    setFilteredHawkers(hawkers);
+  }, [hawkers]); // Update filtered hawkers when hawkers change
   
   const [userLocation, setUserLocation] = useState(null);
 
-const loadData = async () => {
-  dispatch(getHawkers());
-  dispatch(getCrowdLevels());
+  const loadData = async () => {
+    dispatch(getHawkers());
+    dispatch(getCrowdLevels());
 
-  if (isAuthenticated) {
-    dispatch(getUserPreferences());
-  }
+    if (isAuthenticated) {
+      dispatch(getUserPreferences());
+    }
 
-  try {
-    const location = await getCurrentLocation();
-    setUserLocation(location);
-  } catch (error) {
-    console.error('Failed to get location:', error);
-  }
-};
+    try {
+      const location = await getCurrentLocation();
+      setUserLocation(location);
+    } catch (error) {
+      console.error('Failed to get location:', error);
+    }
+  };
 
-  
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
