@@ -28,7 +28,7 @@ def check_environment():
     required_vars = [
         "GOOGLE_PLACES_API_KEY",
         "LTA_DATAMALL_API_KEY",
-        "MONGO_URI"
+        "MONGO_DB"
     ]
     
     missing_vars = []

@@ -490,7 +490,7 @@ def train_and_save_model():
     load_dotenv()
 
     lta_api_key = os.getenv("LTA_DATAMALL_API_KEY")
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+    mongo_uri = os.getenv("MONGO_DB")
     google_api_key = os.getenv("GOOGLE_PLACES_API_KEY")
 
     # Initialize the predictor
