@@ -38,6 +38,7 @@ const HawkersStack = () => (
     <Stack.Screen name="HawkerDetail" component={HawkerDetailScreen} />
     <Stack.Screen name="StallDetail" component={StallDetailScreen} />
     <Stack.Screen name="Order" component={OrderScreen} />
+    <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
     <Stack.Screen name="CrowdReport" component={CrowdReportScreen} />
     <Stack.Screen name="FilterScreen" component={FilterScreen} />
   </Stack.Navigator>
