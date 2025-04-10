@@ -16,7 +16,8 @@ const QueueManagementScreen = ({ route, navigation }) => {
   const auth = useSelector(state => state.auth);
   const { token } = auth;
   
-  const { stallId } = route.params;
+  const { user } = useSelector(state => state.auth);
+  const stallId = user?.stallId;
   
   useEffect(() => {
     fetchQueueData();
@@ -153,6 +154,19 @@ const QueueManagementScreen = ({ route, navigation }) => {
       </View>
     );
   }
+
+  if (!queue) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>No Queue Found</Text>
+        <Text style={{ marginTop: 10, color: '#7f8c8d', textAlign: 'center', paddingHorizontal: 20 }}>
+          You haven't set up a stall yet, or the queue hasn't been initialized.
+          Please add your stall under a hawker centre to start managing your queue.
+        </Text>
+      </View>
+    );
+  }
+  
   
   return (
     <View style={styles.container}>
@@ -170,7 +184,10 @@ const QueueManagementScreen = ({ route, navigation }) => {
         <View style={styles.queueInfo}>
           <View style={styles.queueNumberContainer}>
             <Text style={styles.queueLabel}>Now Serving</Text>
-            <Text style={styles.queueNumber}>{queue.currentNumber}</Text>
+            <Text style={styles.queueNumber}>
+              {queue ? queue.currentNumber : '--'}
+            </Text>
+
           </View>
           
           <View style={styles.queueStatsContainer}>

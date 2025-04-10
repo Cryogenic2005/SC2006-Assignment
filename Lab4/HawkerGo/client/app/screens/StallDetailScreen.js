@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, Button, Divider, Badge, Icon } from 'react-native-elements';
 import axios from 'axios';
-import { API_BASE_URL } from '../constants/constants';
+import { API_BASE_URL } from '../constants/api';
 
 const StallDetailScreen = ({ route, navigation }) => {
   const { stallId, stallName } = route.params;
@@ -11,6 +11,8 @@ const StallDetailScreen = ({ route, navigation }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [queueStatus, setQueueStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   
   const auth = useSelector(state => state.auth);
   const { token } = auth;
@@ -27,24 +29,22 @@ const StallDetailScreen = ({ route, navigation }) => {
     try {
       setLoading(true);
       
-      // Get stall details
+      console.log('📥 Fetching stall:', stallId);
       const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}`);
       setStall(stallRes.data);
-      
-      // Get menu items
+  
       const menuRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}/menu`);
       setMenuItems(menuRes.data);
-      
-      // Get queue status
+  
       const queueRes = await axios.get(`${API_BASE_URL}/api/queues/stall/${stallId}`);
       setQueueStatus(queueRes.data);
-      
+  
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching stall data:', err);
       setLoading(false);
     }
   };
+  
   
   const handlePlaceOrder = () => {
     navigation.navigate('Order', { stallId, stallName });
@@ -97,16 +97,25 @@ const StallDetailScreen = ({ route, navigation }) => {
         <Text style={styles.description}>{stall.description}</Text>
         
         <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <Icon name="access-time" size={16} color="#7f8c8d" />
-            <Text style={styles.infoText}>{stall.operatingHours}</Text>
+        <View style={styles.infoItem}>
+          <Icon name="access-time" size={16} color="#7f8c8d" />
+          <View style={{ marginLeft: 5 }}>
+            {Object.entries(stall.operatingHours).map(([day, hours]) => (
+              <Text key={day} style={styles.infoText}>
+                {capitalize(day)}: {hours.open} - {hours.close}
+              </Text>
+            ))}
           </View>
-          
+        </View>
+
           <View style={styles.infoItem}>
             <Icon name="attach-money" size={16} color="#7f8c8d" />
             <Text style={styles.infoText}>
-              ${stall.minPrice.toFixed(2)} - ${stall.maxPrice.toFixed(2)}
+              {stall.minPrice !== undefined && stall.maxPrice !== undefined
+                ? `$${stall.minPrice.toFixed(2)} - $${stall.maxPrice.toFixed(2)}`
+                : 'Price info unavailable'}
             </Text>
+
           </View>
         </View>
       </Card>

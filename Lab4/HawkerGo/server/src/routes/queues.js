@@ -10,18 +10,23 @@ const Order = require('../models/Order');
 // @route   GET api/queues/stall/:stallId
 // @desc    Get queue status for a stall
 // @access  Public
+// routes/api/queues.js
 router.get('/stall/:stallId', async (req, res) => {
   try {
     const { stallId } = req.params;
 
-    // Check if stall exists
+    if (!stallId) {
+      return res.status(400).json({ msg: 'Stall ID is required' });
+    }
+
     const stall = await Stall.findById(stallId);
     if (!stall) {
       return res.status(404).json({ msg: 'Stall not found' });
     }
 
-    // Get or create queue
     let queue = await Queue.findOne({ stall: stallId });
+
+    // Auto-create queue if it doesn't exist
     if (!queue) {
       queue = new Queue({
         stall: stallId,
@@ -33,13 +38,15 @@ router.get('/stall/:stallId', async (req, res) => {
       await queue.save();
     }
 
-    // Calculate estimated wait time based on pending orders
+    // Count pending orders
     const pendingOrders = await Order.countDocuments({
       stall: stallId,
-      status: { $in: ['pending', 'preparing'] }
+      status: { $in: ['pending', 'preparing', 'ready'] }
     });
 
-    const queueStatus = {
+    const response = {
+      _id: queue._id,
+      stall: queue.stall,
       status: queue.status,
       currentNumber: queue.currentNumber,
       lastNumber: queue.lastNumber,
@@ -48,12 +55,14 @@ router.get('/stall/:stallId', async (req, res) => {
       pendingOrders
     };
 
-    res.json(queueStatus);
+    res.json(response);
+
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('[GET /queues/stall/:stallId] Server Error:', err.message);
+    res.status(500).json({ msg: 'Server error when fetching queue data' });
   }
 });
+
 
 // @route   PUT api/queues/stall/:stallId
 // @desc    Update queue settings (stall owner only)

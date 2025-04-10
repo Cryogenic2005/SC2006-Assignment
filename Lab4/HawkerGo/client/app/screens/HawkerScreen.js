@@ -5,7 +5,7 @@ import { SearchBar, Button } from 'react-native-elements';
 import { getHawkers, getCrowdLevels } from '../store/slices/hawkerSlice';
 import { getUserPreferences } from '../store/slices/preferencesSlice';
 import { getRecommendations } from '../services/recommendationService';
-import { getCurrentLocation, getNearbyHawkers } from '../services/locationService'; 
+import { getCurrentLocation, getNearbyHawkers, calculateDistance } from '../services/locationService'; 
 import HawkerCard from '../components/HawkerCard';
 
 const HawkersScreen = ({ navigation }) => {
@@ -24,20 +24,25 @@ const HawkersScreen = ({ navigation }) => {
     loadData();
   }, []);
   
-  useEffect(() => {
-    if (hawkers.length > 0) {
-      filterHawkers();
-    }
-  }, [hawkers, search]);
   
-  const loadData = async () => {
-    dispatch(getHawkers());
-    dispatch(getCrowdLevels());
-    
-    if (isAuthenticated) {
-      dispatch(getUserPreferences());
-    }
-  };
+  const [userLocation, setUserLocation] = useState(null);
+
+const loadData = async () => {
+  dispatch(getHawkers());
+  dispatch(getCrowdLevels());
+
+  if (isAuthenticated) {
+    dispatch(getUserPreferences());
+  }
+
+  try {
+    const location = await getCurrentLocation();
+    setUserLocation(location);
+  } catch (error) {
+    console.error('Failed to get location:', error);
+  }
+};
+
   
   const onRefresh = async () => {
     setRefreshing(true);
@@ -91,13 +96,23 @@ const HawkersScreen = ({ navigation }) => {
   };
   
   const renderHawkerCard = ({ item }) => {
+    let distance = null;
+  
+    if (userLocation && item.location?.coordinates) {
+      const [lng, lat] = item.location.coordinates;
+      distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        lat,
+        lng
+      );
+    }
+  
     return (
       <HawkerCard
         hawker={item}
         crowdLevel={crowdLevels[item._id]?.level || 'Unknown'}
-        distance={Math.random() * 2}  // Placeholder for distance, initially { item.distance }, but
-                                      // no such data returned from the API. We should calculate it
-                                      // based on the user's location instead.
+        distance={distance}  // Now actual distance
         onPress={() => navigation.navigate('HawkerDetail', { 
           hawkerId: item._id,
           hawkerName: item.name 
@@ -106,17 +121,34 @@ const HawkersScreen = ({ navigation }) => {
     );
   };
   
+  
   return (
     <View style={styles.container}>
       <SearchBar
         placeholder="Search hawker centers..."
-        onChangeText={setSearch}
         value={search}
+        onChangeText={(text) => {
+          setSearch(text);
+        
+          if (text.trim() === '') {
+            setFilteredHawkers(hawkers);
+            return;
+          }
+        
+          const matched = hawkers.filter(h =>
+            (h.name && h.name.toLowerCase().includes(text.toLowerCase())) ||
+            (h.address && h.address.toLowerCase().includes(text.toLowerCase()))
+          );
+        
+          setFilteredHawkers(matched);
+        }}
+        
         containerStyle={styles.searchContainer}
         inputContainerStyle={styles.searchInputContainer}
         lightTheme
         round
       />
+
       
       <View style={styles.filterContainer}>
         <Button
