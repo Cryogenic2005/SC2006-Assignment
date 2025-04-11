@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { API_BASE_URL } from '../constants/api';
 
-const categoryOptions = ['Rice Dishes', 'Noodles', 'Beverages', 'Snacks', 'Vegetarian', 'Seafood', 'Halal'];
+const categoryOptions = ['Rice Dishes', 'Noodles', 'Beverages', 'Snacks', 'Vegetarian', 'Seafood', 'Halal', 'Vegan'];
 
 const defaultHours = { open: '08:00', close: '20:00' };
 
