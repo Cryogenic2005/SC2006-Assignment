@@ -76,19 +76,13 @@ const StallDetailScreen = ({ route, navigation }) => {
           </View>
           
           <View style={styles.badgeContainer}>
-            {stall.isHalal && (
+            {stall.categories.map((category) => (
               <Badge
-                value="Halal"
-                badgeStyle={{ backgroundColor: '#3498db', marginRight: 5, paddingHorizontal: 10 }}
+                key={category}
+                value={capitalize(category)}
+                badgeStyle={{ backgroundColor: '#e67e22', marginRight: 5, paddingHorizontal: 10 }}
               />
-            )}
-            
-            {stall.isVegetarian && (
-              <Badge
-                value="Vegetarian"
-                badgeStyle={{ backgroundColor: '#2ecc71', marginRight: 5, paddingHorizontal: 10 }}
-              />
-            )}
+            ))}
           </View>
         </View>
         
@@ -233,9 +227,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 0
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    flex: 1
   },
   stallName: {
     fontSize: 22,
@@ -247,7 +239,11 @@ const styles = StyleSheet.create({
     color: '#7f8c8d'
   },
   badgeContainer: {
-    flexDirection: 'row'
+    marginTop: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: 6,
+    columnGap: 6
   },
   divider: {
     marginVertical: 15
