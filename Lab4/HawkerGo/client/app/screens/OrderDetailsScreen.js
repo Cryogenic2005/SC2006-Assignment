@@ -21,6 +21,9 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
   const { orderId, initialAction } = route.params;
 
+  // If initialAction is null, there's no action to perform
+  const [performedInitialAction, setPerformedInitialAction] = useState(initialAction == null);
+
   // Animation function for status changes
   const startPulseAnimation = () => {
     Animated.sequence([
@@ -86,10 +89,6 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       setOrder(res.data);
       setLoading(false);
 
-      // Handle initial actions
-      if (initialAction === 'cancel' && res.data.status === 'pending') {
-        confirmCancelOrder();
-      }
     } catch (err) {
       console.error('Error fetching order details:', err);
       setLoading(false);
@@ -145,6 +144,8 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       setOrder({ ...order, status: 'cancelled' });
       setCancelLoading(false);
 
+      navigation.goBack();
+
       Alert.alert('Success', 'Your order has been cancelled');
     } catch (err) {
       setCancelLoading(false);
@@ -188,6 +189,14 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         <Text>Order not found</Text>
       </View>
     );
+  }
+
+  // Handle initial actions
+  if (!performedInitialAction){
+    if (initialAction === 'cancel' && order.status === 'pending') {
+      setPerformedInitialAction(true);
+      confirmCancelOrder();
+    }
   }
 
   return (
