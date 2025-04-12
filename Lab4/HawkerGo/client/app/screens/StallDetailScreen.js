@@ -26,6 +26,8 @@ const StallDetailScreen = ({ route, navigation }) => {
   const fetchStallData = async () => {
     try {
       setLoading(true);
+
+      console.log('📥 Fetching stall:', stallId);
       const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}`);
       setStall(stallRes.data);
 
@@ -79,12 +81,13 @@ const StallDetailScreen = ({ route, navigation }) => {
             <Text style={styles.cuisineType}>{stall.cuisine}</Text>
           </View>
           <View style={styles.badgeContainer}>
-            {stall.isHalal && (
-              <Badge value="Halal" badgeStyle={{ backgroundColor: '#3498db', marginRight: 5 }} />
-            )}
-            {stall.isVegetarian && (
-              <Badge value="Vegetarian" badgeStyle={{ backgroundColor: '#2ecc71' }} />
-            )}
+            {stall.categories.map((category) => (
+              <Badge
+                key={category}
+                value={capitalize(category)}
+                badgeStyle={{ backgroundColor: '#e67e22', marginRight: 5, paddingHorizontal: 10 }}
+              />
+            ))}
           </View>
         </View>
 
@@ -207,23 +210,80 @@ const styles = StyleSheet.create({
     marginTop: -30, borderTopLeftRadius: 30, borderTopRightRadius: 30,
     padding: 20, margin: 0, borderLeftWidth: 0, borderRightWidth: 0
   },
-  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  stallName: { fontSize: 22, fontWeight: 'bold', marginBottom: 5 },
-  cuisineType: { fontSize: 16, color: '#7f8c8d' },
-  badgeContainer: { flexDirection: 'row' },
-  divider: { marginVertical: 15 },
-  description: { fontSize: 16, marginBottom: 15, lineHeight: 22 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  infoItem: { flexDirection: 'row', alignItems: 'center' },
-  infoText: { marginLeft: 5, color: '#7f8c8d' },
-  queueCard: { margin: 10, borderRadius: 10 },
-  queueInfo: { flexDirection: 'row', justifyContent: 'space-between' },
-  queueItem: { alignItems: 'center' },
-  queueLabel: { fontSize: 12, color: '#7f8c8d', marginBottom: 5 },
-  queueNumber: { fontSize: 20, fontWeight: 'bold', color: '#3498db' },
-  queueTime: { fontSize: 20, fontWeight: 'bold', color: '#f39c12' },
-  menuCard: { margin: 10, borderRadius: 10, marginBottom: 80 },
-  noMenuText: { fontStyle: 'italic', color: '#7f8c8d', textAlign: 'center', padding: 20 },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  stallName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  cuisineType: {
+    fontSize: 16,
+    color: '#7f8c8d'
+  },
+  badgeContainer: {
+    flexDirection: 'row'
+  },
+  divider: {
+    marginVertical: 15
+  },
+  description: {
+    fontSize: 16,
+    marginBottom: 15,
+    lineHeight: 22
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  infoText: {
+    marginLeft: 5,
+    color: '#7f8c8d'
+  },
+  queueCard: {
+    margin: 10,
+    borderRadius: 10
+  },
+  queueInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  queueItem: {
+    alignItems: 'center'
+  },
+  queueLabel: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginBottom: 5
+  },
+  queueNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#3498db'
+  },
+  queueTime: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#f39c12'
+  },
+  menuCard: {
+    margin: 10,
+    borderRadius: 10,
+    marginBottom: 80
+  },
+  noMenuText: {
+    fontStyle: 'italic',
+    color: '#7f8c8d',
+    textAlign: 'center',
+    padding: 20
+  },
   menuItem: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#ecf0f1'

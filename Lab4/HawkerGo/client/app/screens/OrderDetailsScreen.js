@@ -18,11 +18,128 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const { token } = auth;
   const { orderId, initialAction } = route.params;
 
+  // If initialAction is null, there's no action to perform
+  const [performedInitialAction, setPerformedInitialAction] = useState(initialAction == null);
+
+  // Animation function for status changes
   const startPulseAnimation = () => {
     Animated.sequence([
       Animated.timing(pulseAnim, { toValue: 1.2, duration: 300, useNativeDriver: true }),
       Animated.timing(pulseAnim, { toValue: 1, duration: 300, useNativeDriver: true })
     ]).start();
+  };
+
+  // Function to fetch queue position
+  const fetchQueuePosition = async () => {
+    if (!order || !['pending', 'preparing'].includes(order.status)) return;
+    
+    try {
+      setPositionLoading(true);
+      setPositionError(false);
+      
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+      
+      const res = await axios.get(`${API_BASE_URL}/api/queues/user/position/${orderId}`, config);
+      setQueuePosition(res.data);
+      setPositionLoading(false);
+    } catch (err) {
+      console.error('Error fetching queue position:', err);
+      setPositionError(true);
+      setPositionLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async () => {
+    try {
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+
+      const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
+      
+      // Check if the status has changed and show notification
+      if (order && order.status !== res.data.status) {
+        setPreviousStatus(order.status);
+        setStatusChangeVisible(true);
+        startPulseAnimation();
+        
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          setStatusChangeVisible(false);
+        }, 5000);
+      }
+      
+      setOrder(res.data);
+      setLoading(false);
+
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      setLoading(false);
+      Alert.alert('Error', 'Could not load order details');
+    }
+  };
+
+  useEffect(() => {
+    fetchOrderDetails();
+    
+    // Poll for order updates
+    const orderInterval = setInterval(fetchOrderDetails, 20000); // Update every 20 seconds
+    
+    return () => clearInterval(orderInterval);
+  }, [orderId, initialAction]);
+
+  // Set up polling for queue position updates
+  useEffect(() => {
+    if (!order) return;
+    
+    // Only fetch and poll if the order is pending or preparing
+    if (['pending', 'preparing'].includes(order.status)) {
+      fetchQueuePosition();
+      const interval = setInterval(fetchQueuePosition, 15000); // Update every 15 seconds
+      return () => clearInterval(interval);
+    }
+  }, [order]);
+
+  const confirmCancelOrder = () => {
+    Alert.alert(
+      'Cancel Order',
+      'Are you sure you want to cancel this order?',
+      [
+        { text: 'No', style: 'cancel' },
+        { text: 'Yes', onPress: handleCancelOrder }
+      ]
+    );
+  };
+
+  const handleCancelOrder = async () => {
+    try {
+      setCancelLoading(true);
+
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+      
+      await axios.put(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {}, config);
+      
+      // Update local state
+      setOrder({ ...order, status: 'cancelled' });
+      setCancelLoading(false);
+
+      navigation.goBack();
+
+      Alert.alert('Success', 'Your order has been cancelled');
+    } catch (err) {
+      setCancelLoading(false);
+      Alert.alert('Error', err.response?.data?.msg || 'Could not cancel your order');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -43,44 +160,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       case 'ready': return 'Ready for Pickup';
       case 'completed': return 'Completed';
       case 'cancelled': return 'Cancelled';
-      default: return 'Unknown';
-    }
-  };
-
-  const fetchOrderDetails = async () => {
-    try {
-      const config = { headers: { 'x-auth-token': token } };
-      const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
-      setOrder(res.data);
-      setLoading(false);
-
-      if (initialAction === 'cancel' && res.data.status === 'pending') {
-        confirmCancelOrder();
-      }
-    } catch (err) {
-      setLoading(false);
-      Alert.alert('Error', 'Could not load order details');
-    }
-  };
-
-  const confirmCancelOrder = () => {
-    Alert.alert('Cancel Order', 'Are you sure you want to cancel this order?', [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes', onPress: handleCancelOrder }
-    ]);
-  };
-
-  const handleCancelOrder = async () => {
-    try {
-      setCancelLoading(true);
-      const config = { headers: { 'x-auth-token': token } };
-      await axios.put(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {}, config);
-      setOrder({ ...order, status: 'cancelled' });
-      setCancelLoading(false);
-      Alert.alert('Success', 'Your order has been cancelled');
-    } catch (err) {
-      setCancelLoading(false);
-      Alert.alert('Error', err.response?.data?.msg || 'Could not cancel your order');
+      default: return status;
     }
   };
 
@@ -115,6 +195,14 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     return <View style={styles.center}><Text>Order not found</Text></View>;
   }
 
+  // Handle initial actions
+  if (!performedInitialAction){
+    if (initialAction === 'cancel' && order.status === 'pending') {
+      setPerformedInitialAction(true);
+      confirmCancelOrder();
+    }
+  }
+
   return (
     <ScrollView style={styles.container}>
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
@@ -125,7 +213,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
               <Text style={styles.stallName}>{order.stall.name}</Text>
             </View>
 
-            {/* ✅ Replaced Badge with this safe View */}
+        
             <View style={{
               backgroundColor: getStatusColor(order.status),
               paddingHorizontal: 15,
