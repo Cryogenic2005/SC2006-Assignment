@@ -1,19 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Card, Icon } from 'react-native-elements';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from '../constants/api';
 
 const StallAnalyticsScreen = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useSelector((state) => state.auth);
+  const { user, token } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
+      let stallIdToUse = user?.stallId;
+
+      // If the user doesn't have stallId, fetch the stall details of the current owner
+      if (!stallIdToUse) {
+        try {
+          const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, {
+            headers: { 'x-auth-token': token },
+          });
+          if (stallRes.data && stallRes.data.length > 0) {
+            stallIdToUse = stallRes.data[0]._id;
+          } else {
+            setError('No stall associated with your account.');
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Error fetching stall details:', err.message);
+          setError('Error fetching stall details.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fetch analytics using the determined stallId
       try {
-        const res = await axios.get(`/api/stalls/${user.stallId}/analytics`);
+        const res = await axios.get(`${API_BASE_URL}/api/stalls/${stallIdToUse}/analytics`, {
+          headers: { 'x-auth-token': token },
+        });
         setAnalytics(res.data);
       } catch (err) {
         console.error('Error fetching analytics:', err.message);
@@ -23,13 +50,8 @@ const StallAnalyticsScreen = () => {
       }
     };
 
-    if (user?.stallId) {
-      fetchAnalytics();
-    } else {
-      setError('No stall associated with your account.');
-      setLoading(false);
-    }
-  }, [user]);
+    fetchAnalytics();
+  }, [user, token]);
 
   if (loading) {
     return (
