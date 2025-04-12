@@ -659,7 +659,7 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
     }
 
     // Simulated visit count from reviews
-    const totalVisits = stall.ratings.length || 0;
+    const totalVisits = stall.reviews.length || 0;
 
     // Optional: Add logic if order data is available for real revenue
     const totalRevenue = stall.orders ? stall.orders.reduce((acc, o) => acc + o.totalPrice, 0) : 0;
@@ -677,7 +677,7 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
       totalVisits,
       totalRevenue,
       rating: stall.averageRating || 0,
-      reviewCount: stall.ratings?.length || 0,
+      reviewCount: stall.reviews.length || 0,
       menuItemCount,
       operatingDays,
     });
