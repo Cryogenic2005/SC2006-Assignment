@@ -7,6 +7,9 @@ const Stall = require('../models/Stall');
 const MenuItem = require('../models/MenuItem');
 const Hawker = require('../models/Hawker');
 const User = require('../models/User');
+const Review = require('../models/Review');
+const Order = require('../models/Order');
+
 
 // @route   GET api/stalls
 // @desc    Get all stalls
@@ -679,6 +682,80 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
       menuItemCount,
       operatingDays,
     });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   POST api/stalls/:stallId/reviews
+// @desc    Leave a review for a stall (must have ordered from stall before)
+// @access  Private
+router.post(
+  '/:stallId/reviews',
+  [
+    auth,
+    check('text', 'Review text is required').not().isEmpty()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { text, orderId } = req.body;
+      const stallId = req.params.stallId;
+
+      // Check if order exists and is associated with this stall
+      const order = await Order.findOne({
+        _id: orderId,
+        user: req.user.id,
+        stall: stallId
+      });
+
+      if (!order) {
+        return res.status(403).json({ msg: 'No valid order found for this stall' });
+      }
+
+      // Prevent duplicate reviews for the same order
+      const existingReview = await Review.findOne({
+        user: req.user.id,
+        stall: stallId,
+        order: orderId
+      });
+
+      if (existingReview) {
+        return res.status(400).json({ msg: 'You already submitted a review for this order' });
+      }
+
+      const review = new Review({
+        user: req.user.id,
+        stall: stallId,
+        order: orderId,
+        text
+      });
+
+      await review.save();
+
+      res.json(review);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route   GET api/stalls/:stallId/reviews
+// @desc    Get all reviews for a stall
+// @access  Public
+router.get('/:stallId/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ stall: req.params.stallId })
+      .populate('user', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
