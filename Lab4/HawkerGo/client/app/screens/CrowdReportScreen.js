@@ -1,4 +1,3 @@
-// screens/CrowdReportScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -39,7 +38,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
         setCurrentCrowd(crowdLevels[hawkerId].level);
       } else {
         // Try to fetch from API if not in Redux
-        const res = await axios.get(`${API_BASE_URL}/api/crowds/${hawkerId}`);
+        const res = await axios.get(`${API_BASE_URL}/api/crowd/${hawkerId}`);
         if (res.data && res.data.level) {
           setCurrentCrowd(res.data.level);
         } else {
@@ -62,7 +61,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
         };
 
         const userReportRes = await axios.get(
-          `${API_BASE_URL}/api/crowds/user-status/${hawkerId}`,
+          `${API_BASE_URL}/api/crowd/user-status/${hawkerId}`,
           config
         );
 
@@ -120,7 +119,7 @@ const CrowdReportScreen = ({ route, navigation }) => {
         level: selectedLevel
       };
       
-      await axios.post(`${API_BASE_URL}/api/crowds`, body, config);
+      await axios.post(`${API_BASE_URL}/api/crowd`, body, config);
       
       setSubmitting(false);
       setSelectedLevel(null);
