@@ -97,6 +97,7 @@ const ProfileScreen = ({ navigation }) => {
           type="outline"
           buttonStyle={styles.editButton}
           titleStyle={{ color: '#e67e22' }}
+          onPress={() => navigation.navigate('Settings')}
         />
       </Card>
       
@@ -180,14 +181,14 @@ const ProfileScreen = ({ navigation }) => {
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
         </TouchableOpacity>)}
         
-        <TouchableOpacity
+        {user?.userType !== 'stallOwner' && (<TouchableOpacity
           onPress={() => navigation.navigate('FilterScreen')}
           style={styles.menuItem}
         >
           <Icon name="tune" color="#3498db" size={24} />
           <Text style={styles.menuItemText}>Preferences</Text>
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
-        </TouchableOpacity>
+        </TouchableOpacity>)}
         
         <TouchableOpacity 
           onPress={() => navigation.navigate('Settings')}
