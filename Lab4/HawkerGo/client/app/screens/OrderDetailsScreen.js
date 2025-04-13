@@ -12,6 +12,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [review, setReview] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [queueInfo, setQueueInfo] = useState(null);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const auth = useSelector(state => state.auth);
@@ -34,22 +35,24 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     if (!order || !['pending', 'preparing'].includes(order.status)) return;
     
     try {
-      setPositionLoading(true);
-      setPositionError(false);
+      // setPositionLoading(true);
+      // setPositionError(false);
       
       const config = {
         headers: {
           'x-auth-token': token
         }
       };
-      
+
       const res = await axios.get(`${API_BASE_URL}/api/queues/user/position/${orderId}`, config);
-      setQueuePosition(res.data);
-      setPositionLoading(false);
+      console.log('Queue data:', res.data);
+
+      setQueueInfo(res.data);
+      // setPositionLoading(false);
     } catch (err) {
       console.error('Error fetching queue position:', err);
-      setPositionError(true);
-      setPositionLoading(false);
+      // setPositionError(true);
+      // setPositionLoading(false);
     }
   };
 
@@ -211,8 +214,10 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             <View>
               <Text style={styles.orderNumber}>Order #{order.queueNumber}</Text>
               <Text style={styles.stallName}>{order.stall.name}</Text>
+              {queueInfo && (
+                <Text style={{ color: '#7f8c8d' }}>Current queue: {queueInfo.currentNumber}</Text>
+              )}
             </View>
-
         
             <View style={{
               backgroundColor: getStatusColor(order.status),

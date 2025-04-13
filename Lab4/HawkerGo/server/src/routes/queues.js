@@ -132,8 +132,20 @@ router.put('/stall/:stallId/reset', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Queue not found' });
     }
 
-    queue.currentNumber = 0;
-    queue.lastNumber = 0;
+    const pendingOrders = await Order.find({
+      stall: stallId,
+      status: { $in: ['pending', 'preparing'] }
+    }).sort({ created: 1 });
+
+    if (pendingOrders.length === 0) {
+      queue.currentNumber = 1;
+      queue.lastNumber = 0;
+    }
+    else{
+      queue.currentNumber = pendingOrders[0].queueNumber;
+      queue.lastNumber = pendingOrders[pendingOrders.length - 1].queueNumber;
+    }
+
     queue.updated = Date.now();
 
     await queue.save();

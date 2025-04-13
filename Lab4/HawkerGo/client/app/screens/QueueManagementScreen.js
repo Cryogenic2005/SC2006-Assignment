@@ -28,7 +28,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
       fetchQueueData();
     
     // Set up polling for updates
-    const interval = setInterval(fetchQueueData, 300000); // Poll every 30 seconds
+    const interval = setInterval(fetchQueueData, 30000); // Poll every 30 seconds
     
     return () => clearInterval(interval);
   }, [stallId]);
@@ -66,7 +66,6 @@ const QueueManagementScreen = ({ route, navigation }) => {
       
       console.log('Fetching queue data...');
       console.log('Stall ID:', stallId);
-      console.log('Config: ', config);
 
       // Get queue status
       const queueRes = await axios.get(`${API_BASE_URL}/api/queues/stall/${stallId}`, config);
@@ -319,13 +318,13 @@ const QueueManagementScreen = ({ route, navigation }) => {
                   />
                 )}
                 
-                <Button
+                {item.status !== 'ready' && (<Button
                   title="Cancel"
                   type="outline"
                   buttonStyle={styles.cancelButton}
                   titleStyle={styles.cancelButtonText}
                   onPress={() => updateOrderStatus(item._id, 'cancelled')}
-                />
+                />)}
               </View>
             </Card>
           )}
