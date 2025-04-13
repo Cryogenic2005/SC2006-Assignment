@@ -21,8 +21,8 @@ const StallAnalyticsScreen = () => {
           const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, {
             headers: { 'x-auth-token': token },
           });
-          if (stallRes.data && stallRes.data.length > 0) {
-            stallIdToUse = stallRes.data[0]._id;
+          if (stallRes.data) {
+            stallIdToUse = stallRes.data._id;
           } else {
             setError('No stall associated with your account.');
             setLoading(false);
