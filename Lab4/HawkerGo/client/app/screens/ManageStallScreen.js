@@ -60,17 +60,17 @@ const ManageStallScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Stall Management</Text>
 
-      <Card containerStyle={styles.card}>
-        <TouchableOpacity
-          style={styles.actionRow}
-          onPress={() => navigation.navigate('AddStall')}
-        >
-          <Icon name="add-business" color="#2ecc71" size={28} />
-          <Text style={styles.actionText}>Add Stall to Hawker Centre</Text>
-        </TouchableOpacity>
-      </Card>
-
-      {stall && (
+      {stall == null ? (
+        <Card containerStyle={styles.card}>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('AddStall')}
+          >
+            <Icon name="add-business" color="#2ecc71" size={28} />
+            <Text style={styles.actionText}>Add Stall to Hawker Centre</Text>
+          </TouchableOpacity>
+        </Card>
+      ) : (
         <>
           <Card containerStyle={styles.card}>
             <TouchableOpacity
