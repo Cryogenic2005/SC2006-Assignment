@@ -44,6 +44,47 @@ export const logout = createAsyncThunk('auth/logout', async () => {
   await AsyncStorage.removeItem('token');
 });
 
+export const updateUserSettings = createAsyncThunk(
+  'auth/updateUserSettings',
+  async (userData, thunkAPI) => {
+    try {
+      const state = thunkAPI.getState();
+      const token = state.auth.token;
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await authService.updateUserSettings(token, userData);
+      
+      // Update the user object in the state
+      return response.user;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data || { message: 'Failed to update settings' });
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async ({ currentPassword, newPassword }, thunkAPI) => {
+    try {
+      const state = thunkAPI.getState();
+      const token = state.auth.token;
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      await authService.changePassword(token, currentPassword, newPassword);
+      
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data || { message: 'Failed to change password' });
+    }
+  }
+);
+
 const initialState = {
   user: null,
   token: null,
@@ -115,6 +156,35 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+      })
+      .addCase(updateUserSettings.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.errorMessage = '';
+      })
+      .addCase(updateUserSettings.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(updateUserSettings.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload?.message || 'Failed to update settings';
+      })
+      .addCase(changePassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.errorMessage = '';
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.errorMessage = action.payload?.message || 'Failed to change password';
       });
   },
 });

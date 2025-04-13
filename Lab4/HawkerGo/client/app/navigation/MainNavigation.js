@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoyaltyScreen from '../screens/LoyaltyScreen';
 import FilterScreen from '../screens/FilterScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 // Customer Screens
 import HawkerScreen from '../screens/HawkerScreen';
@@ -59,6 +60,11 @@ const ProfileStack = () => (
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="Loyalty" component={LoyaltyScreen} />
     <Stack.Screen name="FilterScreen" component={FilterScreen} />
+    <Stack.Screen 
+      name="Settings" 
+      component={SettingsScreen} 
+      options={{ title: 'Account Settings' }} 
+    />
   </Stack.Navigator>
 );
 

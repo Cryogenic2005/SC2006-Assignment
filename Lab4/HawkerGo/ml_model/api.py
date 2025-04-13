@@ -166,9 +166,10 @@ def predict_crowd(hawker_id):
     """Get crowd level prediction for a hawker center (endpoint for mlService.js)."""
     if predictor is None:
         # Use consistent mock prediction strategy
+        # Import everything upfront before any operations
         import random
         import hashlib
-        import time
+        import time as time_module
 
         # Create hash-based seed for consistent randomness
         hash_obj = hashlib.md5(hawker_id.encode())
@@ -198,7 +199,7 @@ def predict_crowd(hawker_id):
 
         # Choose level based on weighted random selection
         level = random.choices(levels, weights=level_weights)[0]
-        
+
         # Generate consistent confidence based on hawker ID
         confidence = 0.5 + (hash_int % 50) / 100.0  # 0.5 to 1.0
 
@@ -206,7 +207,7 @@ def predict_crowd(hawker_id):
             "hawker_id": hawker_id,
             "crowd_level": level,
             "confidence": confidence,
-            "timestamp": time.time(),
+            "timestamp": time_module.time(),
             "source": "mock_prediction"
         })
 
@@ -225,7 +226,7 @@ def predict_crowd(hawker_id):
         # Reusing the mock prediction logic from above
         import random
         import hashlib
-        import time
+        import time as time_module
 
         # Create hash-based seed for consistent randomness
         hash_obj = hashlib.md5(hawker_id.encode())
@@ -255,7 +256,7 @@ def predict_crowd(hawker_id):
 
         # Choose level based on weighted random selection
         level = random.choices(levels, weights=level_weights)[0]
-        
+
         # Generate consistent confidence based on hawker ID
         confidence = 0.5 + (hash_int % 50) / 100.0  # 0.5 to 1.0
 
@@ -263,7 +264,7 @@ def predict_crowd(hawker_id):
             "hawker_id": hawker_id,
             "crowd_level": level,
             "confidence": confidence,
-            "timestamp": time.time(),
+            "timestamp": time_module.time(),
             "source": "error_fallback"
         })
 

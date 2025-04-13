@@ -1,35 +1,12 @@
 // screens/CrowdReportScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Card, Button, Icon } from 'react-native-elements';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
-
-// Mock data for crowd levels when ML model fails
-const MOCK_CROWD_DATA = {
-  'Low': {
-    '1': 'Low',
-    '2': 'Low',
-    '3': 'Low',
-    '4': 'Low',
-    '5': 'Low'
-  },
-  'Medium': {
-    '1': 'Medium',
-    '2': 'Medium',
-    '3': 'High',
-    '4': 'Medium',
-    '5': 'Medium'
-  },
-  'High': {
-    '1': 'High',
-    '2': 'High',
-    '3': 'High',
-    '4': 'Medium',
-    '5': 'High'
-  }
-};
+import { v4 as uuidv4 } from 'uuid';
+import { getCrowdLevels } from '../store/slices/hawkerSlice';
 
 const CrowdReportScreen = ({ route, navigation }) => {
   const [currentCrowd, setCurrentCrowd] = useState('Unknown');
@@ -37,28 +14,43 @@ const CrowdReportScreen = ({ route, navigation }) => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [recentlyReported, setRecentlyReported] = useState(false);
-  
+
+  const dispatch = useDispatch();
   const auth = useSelector(state => state.auth);
   const { token } = auth;
-  
+  const { crowdLevels } = useSelector(state => state.hawkers);
+
   const { hawkerId, hawkerName } = route.params;
   
   useEffect(() => {
+    // If we don't have crowd levels in Redux store yet, fetch them
+    if (!crowdLevels || Object.keys(crowdLevels).length === 0) {
+      dispatch(getCrowdLevels());
+    }
     fetchCrowdData();
-  }, [hawkerId]);
+  }, [hawkerId, crowdLevels]);
   
   const fetchCrowdData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/crowds/${hawkerId}`);
+      setLoading(true);
       
-      // If ML model is not loaded, the data will be null or undefined
-      if (!res.data || !res.data.level) {
-        // Use mock data based on hawker ID last digit
-        const lastDigit = hawkerId.slice(-1);
-        const mockLevel = Object.keys(MOCK_CROWD_DATA)[parseInt(lastDigit) % 3];
-        setCurrentCrowd(mockLevel);
+      // First check if we have this data in Redux store
+      if (crowdLevels && crowdLevels[hawkerId] && crowdLevels[hawkerId].level) {
+        setCurrentCrowd(crowdLevels[hawkerId].level);
       } else {
-        setCurrentCrowd(res.data.level);
+        // Try to fetch from API if not in Redux
+        const res = await axios.get(`${API_BASE_URL}/api/crowds/${hawkerId}`);
+        if (res.data && res.data.level) {
+          setCurrentCrowd(res.data.level);
+        } else {
+          // If API doesn't have level data, use whatever might be in Redux (mock or real)
+          if (crowdLevels && crowdLevels[hawkerId] && crowdLevels[hawkerId].level) {
+            setCurrentCrowd(crowdLevels[hawkerId].level);
+          } else {
+            // Fallback to 'Unknown' if nothing available
+            setCurrentCrowd('Unknown');
+          }
+        }
       }
 
       // Check if user has reported recently
@@ -83,11 +75,14 @@ const CrowdReportScreen = ({ route, navigation }) => {
     } catch (err) {
       console.error('Error fetching crowd data:', err);
       
-      // Use mock data based on hawker ID last digit
-      const lastDigit = hawkerId.slice(-1);
-      const mockLevel = Object.keys(MOCK_CROWD_DATA)[parseInt(lastDigit) % 3];
-      setCurrentCrowd(mockLevel);
-      
+      // Use Redux store data if available, even if API call fails
+      if (crowdLevels && crowdLevels[hawkerId] && crowdLevels[hawkerId].level) {
+        setCurrentCrowd(crowdLevels[hawkerId].level);
+      } else {
+        // Only set to 'Unknown' if we have no other data
+        setCurrentCrowd('Unknown');
+      }
+
       setLoading(false);
     }
   };
@@ -131,9 +126,12 @@ const CrowdReportScreen = ({ route, navigation }) => {
       setSelectedLevel(null);
       setRecentlyReported(true);
       
-      // Refresh crowd data
-      fetchCrowdData();
-
+      // Update Redux store data first, then refresh local data
+      await dispatch(getCrowdLevels());
+      
+      // Update current crowd level to match what was just reported
+      setCurrentCrowd(selectedLevel);
+      
       Alert.alert('Thank You!', 'Your crowd report has been submitted.');
     } catch (err) {
       setSubmitting(false);
@@ -149,8 +147,8 @@ const CrowdReportScreen = ({ route, navigation }) => {
       default: return '#95a5a6';
     }
   };
-  
-  const crowdLevels = [
+
+  const crowdLevelOptions = [
     { value: 'Low', label: 'Low', icon: 'sentiment-satisfied', description: 'Plenty of seats available' },
     { value: 'Medium', label: 'Medium', icon: 'sentiment-neutral', description: 'Some seats available' },
     { value: 'High', label: 'High', icon: 'sentiment-dissatisfied', description: 'Difficult to find seats' }
@@ -172,7 +170,10 @@ const CrowdReportScreen = ({ route, navigation }) => {
             <Text style={styles.crowdLevelText}>{currentCrowd}</Text>
           </View>
           
-          <TouchableOpacity onPress={fetchCrowdData}>
+          <TouchableOpacity onPress={() => {
+            // Dispatch action to refresh Redux store data first, then fetch locally
+            dispatch(getCrowdLevels()).then(() => fetchCrowdData());
+          }}>
             <Text style={styles.refreshText}>
               <Icon name="refresh" size={14} color="#3498db" /> Refresh
             </Text>
@@ -193,14 +194,14 @@ const CrowdReportScreen = ({ route, navigation }) => {
         ) : (
           <>
             <Text style={styles.selectText}>How crowded is it right now?</Text>
-            
+
             <View style={styles.levelContainer}>
-              {crowdLevels.map((level) => (
+              {crowdLevelOptions.map((level) => (
                 <TouchableOpacity
                   key={level.value}
                   style={[
                     styles.levelButton,
-                    selectedLevel === level.value && { 
+                    selectedLevel === level.value && {
                       backgroundColor: getCrowdLevelColor(level.value),
                       borderColor: getCrowdLevelColor(level.value)
                     }
