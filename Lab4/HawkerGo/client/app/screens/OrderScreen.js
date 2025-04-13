@@ -136,22 +136,10 @@ const OrderScreen = ({ route, navigation }) => {
   
   return (
     <View style={styles.container}>
-      <Card containerStyle={styles.stallCard}>
-        <Card.Title>{stall.name}</Card.Title>
-        <Text style={styles.stallInfo}>{stall.description}</Text>
-        <View>
-          <Text style={styles.stallInfo}>Operating Hours:</Text>
-          {Object.entries(stall.operatingHours).map(([day, hours]) => (
-            <Text key={day} style={styles.stallInfo}>
-              {capitalize(day)}: {hours.open} - {hours.close}
-            </Text>
-          ))}
-        </View>
-
-      </Card>
       
       <Text style={styles.sectionTitle}>Menu</Text>
       
+      <View style={styles.listContainer}>
       <FlatList
         data={items}
         keyExtractor={item => item._id}
@@ -171,8 +159,10 @@ const OrderScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             </View>
           </Card>
-        )}
+          )}
+          contentContainerStyle={{ paddingBottom: cart.length > 0 ? 150 : 10 }}
       />
+      </View>
       
       {cart.length > 0 && (
         <View style={styles.cartContainer}>
@@ -271,11 +261,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
+  listContainer: {
+    flex: 1, 
+  },
   cartContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#fff',
     padding: 15,
     borderTopLeftRadius: 20,
