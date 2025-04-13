@@ -39,13 +39,20 @@ const RegisterScreen = ({ navigation }) => {
     };
   }, [isError, isSuccess, errorMessage, dispatch]);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !password || !userType) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    dispatch(register({ name, email, password, userType }));
+    const result = await dispatch(register({ name, email, password, userType }));
+
+    if (register.fulfilled.match(result)) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login', params: { email: email, password: password } }],
+      });
+    }
   };
 
   return (

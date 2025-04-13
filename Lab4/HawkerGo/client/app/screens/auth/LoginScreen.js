@@ -21,7 +21,7 @@ import Constants from 'expo-constants';
 // Initialize WebBrowser for Auth
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ route, navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
@@ -34,6 +34,17 @@ const LoginScreen = ({ navigation }) => {
   const googleAndroidClientId = Constants.expoConfig?.extra?.googleAndroidClientId;
 
   const facebookAppId = Constants.expoConfig?.extra?.facebookAppId;
+
+  useEffect(() => {
+    if (route.params?.email && route.params?.password) {
+      console.log('Received email and password from route params:', route.params);
+
+      setEmail(route.params.email);
+      setPassword(route.params.password);
+
+      handleLogin(route.params.email, route.params.password);
+    }
+  }, []);
 
   // Google Auth with web and iOS client IDs
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
@@ -134,12 +145,12 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  const handleLogin = () => {
-    if (!email || !password) {
+  const handleLogin = (emailInput = email, passwordInput = password) => {
+    if (!emailInput || !passwordInput) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    dispatch(login({ email, password }));
+    dispatch(login({ email: emailInput, password: passwordInput }));
   };
 
   const handleGoogleLogin = async () => {
