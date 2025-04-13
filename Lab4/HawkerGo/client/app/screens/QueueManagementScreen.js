@@ -41,7 +41,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
         }
       };
 
-      const stallIdRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/${user.id}`, config);
+      const stallIdRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, config);
   
       setStallId(stallIdRes.data._id);
     } catch (err) {

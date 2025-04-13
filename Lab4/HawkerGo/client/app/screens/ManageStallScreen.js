@@ -20,8 +20,9 @@ const ManageStallScreen = () => {
       const res = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, {
         headers: { 'x-auth-token': token },
       });
-      if (res.data.length > 0) {
-        setStall(res.data[0]);
+      
+      if (res.data) {
+        setStall(res.data);
       }
     } catch (err) {
       console.error(err.message);

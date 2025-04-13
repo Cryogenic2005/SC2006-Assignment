@@ -27,29 +27,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   GET api/stalls/owner/:ownerId
-// @desc    Get stall owned by a specific owner
-// @access  Public
-router.get('/owner/:ownerId', async (req, res) => {
-  try {
-    const stall = await Stall.findOne({ owner: req.params.ownerId })
-      .populate('hawker', 'name location operatingHours')
-      .populate('owner', 'name email');
-
-    if (!stall) {
-      return res.json({ msg: 'No stalls found' });
-    }
-    
-    res.json(stall);
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Stall not found' });
-    }
-    res.status(500).send('Server Error');
-  }
-});
-
 // @route   GET api/stalls/:id
 // @desc    Get stall by ID
 // @access  Public
@@ -537,13 +514,12 @@ router.get('/search/:query', async (req, res) => {
 });
 
 // @route   GET api/stalls/owner
-// @desc    Get stalls owned by the authenticated user
+// @desc    Get stall owned by the authenticated user
 // @access  Private
 router.get('/owner/me', auth, async (req, res) => {
   try {
-    const stalls = await Stall.find({ owner: req.user.id })
-      .populate('hawker', 'name location')
-      .sort({ name: 1 });
+    const stalls = await Stall.findOne({ owner: req.user.id })
+      .populate('hawker', 'name location');
 
     res.json(stalls);
   } catch (err) {
