@@ -575,14 +575,9 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
-    // Simulated visit count from reviews
-    const totalVisits = stall.reviews.length || 0;
-
     // Optional: Add logic if order data is available for real revenue
     let totalRevenue = 0; // Placeholder for revenue calculation
     const orders = await Order.find({ stall: stall._id });
-    console.log(orders);
-
     if (orders?.length > 0) {
       totalRevenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
     }
@@ -597,7 +592,6 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
 
     res.json({
       stallName: stall.name,
-      totalVisits,
       totalRevenue,
       rating: stall.rating,
       reviewCount: stall.reviews.length || 0,
