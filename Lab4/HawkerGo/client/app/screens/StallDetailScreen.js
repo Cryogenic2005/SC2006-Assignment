@@ -84,11 +84,11 @@ const StallDetailScreen = ({ route, navigation }) => {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
               <Rating
                 readonly
-                startingValue={stall.averageRating || 0}
+                startingValue={stall.rating || 0}
                 imageSize={20}
               />
               <Text style={{ marginLeft: 8, fontSize: 14, color: '#7f8c8d' }}>
-                ({stall.averageRating ? stall.averageRating.toFixed(1) : '0.0'})
+                ({stall.rating ? stall.rating.toFixed(1) : '0.0'})
               </Text>
             </View>
           </View>
