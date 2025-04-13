@@ -28,7 +28,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
       fetchQueueData();
     
     // Set up polling for updates
-    const interval = setInterval(fetchQueueData, 300000); // Poll every 30 seconds
+    const interval = setInterval(fetchQueueData, 30000); // Poll every 30 seconds
     
     return () => clearInterval(interval);
   }, [stallId]);
