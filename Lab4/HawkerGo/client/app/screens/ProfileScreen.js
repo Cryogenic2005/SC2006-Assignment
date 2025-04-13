@@ -107,7 +107,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="Manage Queue"
             buttonStyle={styles.queueButton}
-            onPress={() => navigation.navigate('QueueManagement', { stallId: user.stallId })}
+            onPress={() => navigation.navigate('ManageQueueTab')}
             icon={{
               name: 'people',
               color: '#fff',
@@ -119,7 +119,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="Manage Menu"
             buttonStyle={styles.menuButton}
-            onPress={() => {/* Navigate to menu management */}}
+            onPress={() => {navigation.navigate('ManageStallTab', { screen: 'ManageMenu' })}}
             icon={{
               name: 'restaurant-menu',
               color: '#fff',
