@@ -31,6 +31,8 @@ const LoginScreen = ({ navigation }) => {
   // Get configuration from app.config.js
   const googleWebClientId = Constants.expoConfig?.extra?.googleWebClientId;
   const googleIosClientId = Constants.expoConfig?.extra?.googleIosClientId;
+  const googleAndroidClientId = Constants.expoConfig?.extra?.googleAndroidClientId;
+
   const facebookAppId = Constants.expoConfig?.extra?.facebookAppId;
 
   // Google Auth with web and iOS client IDs
@@ -38,6 +40,7 @@ const LoginScreen = ({ navigation }) => {
     expoClientId: googleWebClientId,
     iosClientId: googleIosClientId,
     webClientId: googleWebClientId,
+    androidClientId: googleAndroidClientId,
     // Use host.exp.exponent as the iOS bundle ID for Expo Go
     iosBundleId: 'host.exp.exponent',
   });
