@@ -36,11 +36,12 @@ const ManageMenuScreen = () => {
         const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, {
           headers: { 'x-auth-token': token },
         });
-        if (stallRes.data.length > 0) {
-          const stall = stallRes.data[0];
+        if (stallRes.data) {
+          const stall = stallRes.data;
           setStallId(stall._id);
 
           const menuRes = await axios.get(`${API_BASE_URL}/api/stalls/${stall._id}/menu`);
+
           setMenuItems(menuRes.data);
         }
       } catch (err) {

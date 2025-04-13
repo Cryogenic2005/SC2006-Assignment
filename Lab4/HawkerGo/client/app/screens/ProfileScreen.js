@@ -107,7 +107,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="Manage Queue"
             buttonStyle={styles.queueButton}
-            onPress={() => navigation.navigate('QueueManagement', { stallId: user.stallId })}
+            onPress={() => navigation.navigate('ManageQueueTab')}
             icon={{
               name: 'people',
               color: '#fff',
@@ -119,7 +119,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="Manage Menu"
             buttonStyle={styles.menuButton}
-            onPress={() => {/* Navigate to menu management */}}
+            onPress={() => {navigation.navigate('ManageStallTab', { screen: 'ManageMenu' })}}
             icon={{
               name: 'restaurant-menu',
               color: '#fff',
@@ -131,7 +131,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="View Analytics"
             buttonStyle={styles.analyticsButton}
-            onPress={() => {/* Navigate to analytics */}}
+            onPress={() => {navigation.navigate('ManageStallTab', { screen: 'StallAnalytics' })}}
             icon={{
               name: 'trending-up',
               color: '#fff',
@@ -171,14 +171,14 @@ const ProfileScreen = ({ navigation }) => {
       )}
       
       <View style={styles.menuListContainer}>
-        <TouchableOpacity
+        {user?.userType !== 'stallOwner' && (<TouchableOpacity
           onPress={() => navigation.navigate('Loyalty')}
           style={styles.menuItem}
         >
           <Icon name="card-giftcard" color="#e67e22" size={24} />
           <Text style={styles.menuItemText}>Loyalty Rewards</Text>
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
-        </TouchableOpacity>
+        </TouchableOpacity>)}
         
         <TouchableOpacity
           onPress={() => navigation.navigate('FilterScreen')}
