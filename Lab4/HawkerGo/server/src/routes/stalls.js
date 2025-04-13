@@ -27,6 +27,29 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET api/stalls/owner/:ownerId
+// @desc    Get stall owned by a specific owner
+// @access  Public
+router.get('/owner/:ownerId', async (req, res) => {
+  try {
+    const stall = await Stall.findOne({ owner: req.params.ownerId })
+      .populate('hawker', 'name location operatingHours')
+      .populate('owner', 'name email');
+
+    if (!stall) {
+      return res.json({ msg: 'No stalls found' });
+    }
+    
+    res.json(stall);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Stall not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   GET api/stalls/:id
 // @desc    Get stall by ID
 // @access  Public
