@@ -661,15 +661,15 @@ router.post(
       if (!stall) {
         return res.status(404).json({ msg: 'Stall not found' });
       }
-
-      stall.reviews.push(review._id);
-
+      
       // Update stall's rating
       const stallReviews = await Review.find({ stall: stallId });
       const totalRating = stallReviews.reduce((acc, rev) => acc + rev.rating, 0);
-      const totalReviews = stall.reviews.length;
-      stall.rating = totalRating / totalReviews;
+      const totalReviews = stall.reviews.length + 1;
       
+      stall.rating = totalRating / totalReviews;
+      stall.reviews.push(review._id);
+
       await stall.save();
 
       res.json(review);
