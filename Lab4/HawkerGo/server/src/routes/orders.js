@@ -206,7 +206,7 @@ router.put(
       // Advance queue only if status is ready or cancelled
       if ((status === 'ready' || status === 'cancelled') && prevStatus !== status) {
         const queue = await Queue.findOne({ stall: order.stall._id });
-        if (queue && order.queueNumber >= queue.currentNumber) {
+        if (queue) {
           const nextOrders = await Order.find({
             stall: order.stall._id,
             status: { $in: ['pending', 'preparing'] }
@@ -246,16 +246,22 @@ router.put('/:id/cancel', auth, async (req, res) => {
     order.status = 'cancelled';
     await order.save();
 
-    // Advance queue if applicable
-    const queue = await Queue.findOne({ stall: order.stall });
-    if (queue && order.queueNumber === queue.currentNumber) {
-      const nextOrder = await Order.findOne({
-        stall: order.stall,
-        queueNumber: { $gt: queue.currentNumber },
-        status: { $in: ['pending', 'preparing', 'ready'] }
-      }).sort({ queueNumber: 1 });
+    const queue = await Queue.findOne({ stall: order.stall._id });
+    if (queue) {
+      const nextOrders = await Order.find({
+        stall: order.stall._id,
+        status: { $in: ['pending', 'preparing'] }
+      }).sort({ created: 1 });
 
-      queue.currentNumber = nextOrder ? nextOrder.queueNumber : queue.currentNumber + 1;
+      const nextOrder = nextOrders?.length > 0 ? nextOrders[0] : null;
+
+      if (nextOrder) {
+        queue.currentNumber = nextOrder.queueNumber;
+      }
+      else if (queue.currentNumber === order.queueNumber) {
+        queue.currentNumber = order.queueNumber + 1;
+      }
+
       await queue.save();
     }
 
