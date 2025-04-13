@@ -76,12 +76,6 @@ const StallAnalyticsScreen = () => {
       <Text style={styles.header}>Stall Analytics</Text>
 
       <Card containerStyle={styles.card}>
-        <Icon name="bar-chart" type="font-awesome" color="#e67e22" size={20} />
-        <Text style={styles.metricLabel}>Total Visits</Text>
-        <Text style={styles.metricValue}>{analytics.totalVisits || 0}</Text>
-      </Card>
-
-      <Card containerStyle={styles.card}>
         <Icon name="money" type="font-awesome" color="#27ae60" size={20} />
         <Text style={styles.metricLabel}>Total Revenue</Text>
         <Text style={styles.metricValue}>${(analytics.totalRevenue || 0).toFixed(2)}</Text>

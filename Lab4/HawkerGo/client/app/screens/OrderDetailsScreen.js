@@ -114,7 +114,14 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       setRating(0);
       setReviewSubmitted(true);
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.msg || 'Could not submit review');
+      console.error('Error submitting review: ', err);
+
+      if (err.response?.data?.msg === 'You already submitted a review for this order') {
+        Alert.alert('Error', 'You have already submitted a review for this order');
+      }
+      else {
+        Alert.alert('Error', 'Could not submit review');
+      }
     } finally {
       setSubmittingReview(false);
     }

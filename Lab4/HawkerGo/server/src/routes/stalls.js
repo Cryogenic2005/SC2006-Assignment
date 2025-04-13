@@ -560,91 +560,6 @@ router.put('/:stallId/availability', auth, async (req, res) => {
   }
 });
 
-// @route   POST api/stalls/:stallId/rating
-// @desc    Rate a stall
-// @access  Private
-router.post(
-  '/:stallId/rating',
-  [
-    auth,
-    check('rating', 'Rating must be between 1 and 5').isInt({ min: 1, max: 5 }),
-    check('comment', 'Comment is required').optional().isString()
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    try {
-      const { rating, comment } = req.body;
-
-      const stall = await Stall.findById(req.params.stallId);
-      
-      if (!stall) {
-        return res.status(404).json({ msg: 'Stall not found' });
-      }
-
-      // Check if user has already rated this stall
-      const existingRatingIndex = stall.ratings.findIndex(
-        r => r.user.toString() === req.user.id
-      );
-
-      if (existingRatingIndex !== -1) {
-        // Update existing rating
-        stall.ratings[existingRatingIndex].rating = rating;
-        stall.ratings[existingRatingIndex].comment = comment;
-        stall.ratings[existingRatingIndex].date = Date.now();
-      } else {
-        // Add new rating
-        stall.ratings.push({
-          user: req.user.id,
-          rating,
-          comment,
-          date: Date.now()
-        });
-      }
-
-      // Recalculate average rating
-      const totalRating = stall.ratings.reduce((acc, item) => acc + item.rating, 0);
-      stall.averageRating = totalRating / stall.ratings.length;
-
-      await stall.save();
-
-      res.json({
-        ratings: stall.ratings,
-        averageRating: stall.averageRating
-      });
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
-    }
-  }
-);
-
-// @route   GET api/stalls/:stallId/ratings
-// @desc    Get stall ratings
-// @access  Public
-router.get('/:stallId/ratings', async (req, res) => {
-  try {
-    const stall = await Stall.findById(req.params.stallId)
-      .select('ratings averageRating')
-      .populate('ratings.user', 'name');
-    
-    if (!stall) {
-      return res.status(404).json({ msg: 'Stall not found' });
-    }
-
-    res.json({
-      ratings: stall.ratings,
-      averageRating: stall.averageRating
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
 // @route   GET api/stalls/:stallId/analytics
 // @desc    Get analytics summary for a stall
 // @access  Private
@@ -660,11 +575,12 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
-    // Simulated visit count from reviews
-    const totalVisits = stall.reviews.length || 0;
-
     // Optional: Add logic if order data is available for real revenue
-    const totalRevenue = stall.orders ? stall.orders.reduce((acc, o) => acc + o.totalPrice, 0) : 0;
+    let totalRevenue = 0; // Placeholder for revenue calculation
+    const orders = await Order.find({ stall: stall._id });
+    if (orders?.length > 0) {
+      totalRevenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
+    }
 
     // Fetch menu item count
     const menuItemCount = await MenuItem.countDocuments({ stall: stall._id });
@@ -676,9 +592,8 @@ router.get('/:stallId/analytics', auth, async (req, res) => {
 
     res.json({
       stallName: stall.name,
-      totalVisits,
       totalRevenue,
-      rating: stall.averageRating || 0,
+      rating: stall.rating,
       reviewCount: stall.reviews.length || 0,
       menuItemCount,
       operatingDays,
@@ -696,7 +611,8 @@ router.post(
   '/:stallId/reviews',
   [
     auth,
-    check('text', 'Review text is required').not().isEmpty()
+    check('text', 'Review text is required').not().isEmpty(),
+    check('rating', 'Rating must be between 1 and 5').isInt({ min: 1, max: 5 })
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -705,7 +621,7 @@ router.post(
     }
 
     try {
-      const { text, orderId } = req.body;
+      const { text, rating, orderId } = req.body;
       const stallId = req.params.stallId;
 
       // Check if order exists and is associated with this stall
@@ -734,10 +650,27 @@ router.post(
         user: req.user.id,
         stall: stallId,
         order: orderId,
+        rating: rating,
         text
       });
 
       await review.save();
+
+      // Retrieve review id and add to stall's reviews array
+      const stall = await Stall.findById(stallId);
+      if (!stall) {
+        return res.status(404).json({ msg: 'Stall not found' });
+      }
+      
+      // Update stall's rating
+      const stallReviews = await Review.find({ stall: stallId });
+      const totalRating = stallReviews.reduce((acc, rev) => acc + rev.rating, 0);
+      const totalReviews = stall.reviews.length + 1;
+      
+      stall.rating = totalRating / totalReviews;
+      stall.reviews.push(review._id);
+
+      await stall.save();
 
       res.json(review);
     } catch (err) {
