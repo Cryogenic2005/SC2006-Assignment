@@ -12,22 +12,50 @@ const QueueManagementScreen = ({ route, navigation }) => {
   const [queueActive, setQueueActive] = useState(true);
   const [waitTime, setWaitTime] = useState(10);
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  // const [isFocused, setIsFocused] = useState(false);
   
   const auth = useSelector(state => state.auth);
   const { token } = auth;
   
   const { user } = useSelector(state => state.auth);
-  const stallId = user?.stallId;
+  const [stallId, setStallId] = useState(null);
   
   useEffect(() => {
-    fetchQueueData();
+    console.log('User:', user);
+    console.log('Stall ID:', stallId);
+
+    if (stallId != null)
+      fetchQueueData();
     
     // Set up polling for updates
-    const interval = setInterval(fetchQueueData, 30000); // Poll every 30 seconds
+    const interval = setInterval(fetchQueueData, 300000); // Poll every 30 seconds
     
     return () => clearInterval(interval);
   }, [stallId]);
+
+  const fetchStallID = async () => {
+    try {
+      const config = {
+        headers: {
+          'x-auth-token': token
+        }
+      };
+
+      const stallIdRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/${user.id}`, config);
   
+      setStallId(stallIdRes.data._id);
+    } catch (err) {
+      console.error('Error fetching stall ID:', err);
+      Alert.alert('Error', 'Could not fetch stall ID');
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchStallID();
+    }
+  }, [user]);
+
   const fetchQueueData = async () => {
     try {
       const config = {
@@ -36,6 +64,10 @@ const QueueManagementScreen = ({ route, navigation }) => {
         }
       };
       
+      console.log('Fetching queue data...');
+      console.log('Stall ID:', stallId);
+      console.log('Config: ', config);
+
       // Get queue status
       const queueRes = await axios.get(`${API_BASE_URL}/api/queues/stall/${stallId}`, config);
       setQueue(queueRes.data);
