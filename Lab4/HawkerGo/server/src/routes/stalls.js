@@ -696,7 +696,8 @@ router.post(
   '/:stallId/reviews',
   [
     auth,
-    check('text', 'Review text is required').not().isEmpty()
+    check('text', 'Review text is required').not().isEmpty(),
+    check('rating', 'Rating must be between 1 and 5').isInt({ min: 1, max: 5 })
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -705,7 +706,7 @@ router.post(
     }
 
     try {
-      const { text, orderId } = req.body;
+      const { text, rating, orderId } = req.body;
       const stallId = req.params.stallId;
 
       // Check if order exists and is associated with this stall
@@ -734,10 +735,20 @@ router.post(
         user: req.user.id,
         stall: stallId,
         order: orderId,
+        rating: rating,
         text
       });
 
       await review.save();
+
+      // Retrieve review id and add to stall's reviews array
+      const stall = await Stall.findById(stallId);
+      if (!stall) {
+        return res.status(404).json({ msg: 'Stall not found' });
+      }
+
+      stall.reviews.push(review._id);
+      await stall.save();
 
       res.json(review);
     } catch (err) {
