@@ -171,14 +171,14 @@ const ProfileScreen = ({ navigation }) => {
       )}
       
       <View style={styles.menuListContainer}>
-        <TouchableOpacity
+        {user?.userType !== 'stallOwner' && (<TouchableOpacity
           onPress={() => navigation.navigate('Loyalty')}
           style={styles.menuItem}
         >
           <Icon name="card-giftcard" color="#e67e22" size={24} />
           <Text style={styles.menuItemText}>Loyalty Rewards</Text>
           <Icon name="chevron-right" color="#bdc3c7" size={24} />
-        </TouchableOpacity>
+        </TouchableOpacity>)}
         
         <TouchableOpacity
           onPress={() => navigation.navigate('FilterScreen')}
