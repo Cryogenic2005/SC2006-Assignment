@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Card, Button, Divider, Badge, Icon } from 'react-native-elements';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
+import { Rating } from 'react-native-ratings';  // Import the Rating component
 
 const StallDetailScreen = ({ route, navigation }) => {
   const { stallId, stallName } = route.params;
@@ -26,8 +27,6 @@ const StallDetailScreen = ({ route, navigation }) => {
   const fetchStallData = async () => {
     try {
       setLoading(true);
-
-      console.log('📥 Fetching stall:', stallId);
       const stallRes = await axios.get(`${API_BASE_URL}/api/stalls/${stallId}`);
       setStall(stallRes.data);
 
@@ -40,6 +39,7 @@ const StallDetailScreen = ({ route, navigation }) => {
       setLoading(false);
     } catch (err) {
       setLoading(false);
+      console.error('Error fetching stall data:', err);
     }
   };
 
@@ -79,6 +79,18 @@ const StallDetailScreen = ({ route, navigation }) => {
           <View>
             <Text style={styles.stallName}>{stall.name}</Text>
             <Text style={styles.cuisineType}>{stall.cuisine}</Text>
+
+            {/* Display average rating if available */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+              <Rating
+                readonly
+                startingValue={stall.averageRating || 0}
+                imageSize={20}
+              />
+              <Text style={{ marginLeft: 8, fontSize: 14, color: '#7f8c8d' }}>
+                ({stall.averageRating ? stall.averageRating.toFixed(1) : '0.0'})
+              </Text>
+            </View>
           </View>
           <View style={styles.badgeContainer}>
             {stall.categories.map((category) => (
@@ -178,6 +190,15 @@ const StallDetailScreen = ({ route, navigation }) => {
           reviews.map((rev, index) => (
             <View key={index} style={{ marginBottom: 15 }}>
               <Text style={{ fontWeight: 'bold' }}>{rev.user?.name || 'Anonymous'}</Text>
+              
+              {/* Display star rating for each review */}
+              <Rating
+                readonly
+                startingValue={rev.rating}
+                imageSize={18}
+                style={{ alignItems: 'flex-start', marginVertical: 5 }}
+              />
+
               <Text>{rev.text}</Text>
               <Text style={{ color: '#aaa', fontSize: 12 }}>
                 {new Date(rev.createdAt).toLocaleString()}
@@ -203,12 +224,20 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   coverImage: { width: '100%', height: 200 },
   placeholderCover: {
-    width: '100%', height: 200, backgroundColor: '#ecf0f1',
-    justifyContent: 'center', alignItems: 'center'
+    width: '100%',
+    height: 200,
+    backgroundColor: '#ecf0f1',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   infoCard: {
-    marginTop: -30, borderTopLeftRadius: 30, borderTopRightRadius: 30,
-    padding: 20, margin: 0, borderLeftWidth: 0, borderRightWidth: 0
+    marginTop: -30,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    margin: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0
   },
   headerContainer: {
     flexDirection: 'row',
@@ -285,16 +314,45 @@ const styles = StyleSheet.create({
     padding: 20
   },
   menuItem: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#ecf0f1'
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ecf0f1'
   },
-  menuItemInfo: { flex: 1, marginRight: 10 },
-  menuItemName: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  menuItemDescription: { fontSize: 14, color: '#7f8c8d', marginBottom: 5 },
-  menuItemTags: { flexDirection: 'row' },
-  menuItemPrice: { fontSize: 16, fontWeight: 'bold', color: '#e67e22' },
-  orderButtonContainer: { position: 'absolute', bottom: 20, left: 20, right: 20 },
-  orderButton: { backgroundColor: '#e67e22', borderRadius: 10, paddingVertical: 12 }
+  menuItemInfo: {
+    flex: 1,
+    marginRight: 10
+  },
+  menuItemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 5
+  },
+  menuItemTags: {
+    flexDirection: 'row'
+  },
+  menuItemPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#e67e22'
+  },
+  orderButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20
+  },
+  orderButton: {
+    backgroundColor: '#e67e22',
+    borderRadius: 10,
+    paddingVertical: 12
+  }
 });
 
 export default StallDetailScreen;

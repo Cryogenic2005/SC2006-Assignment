@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Card, Button, Divider, Icon, Input } from 'react-native-elements';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
+import { AirbnbRating } from 'react-native-ratings'; // ⭐ Add this
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const [order, setOrder] = useState(null);
@@ -11,6 +12,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [review, setReview] = useState('');
+  const [rating, setRating] = useState(0); // ⭐ New state for star rating
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [queueInfo, setQueueInfo] = useState(null);
 
@@ -18,11 +20,8 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const auth = useSelector(state => state.auth);
   const { token } = auth;
   const { orderId, initialAction } = route.params;
-
-  // If initialAction is null, there's no action to perform
   const [performedInitialAction, setPerformedInitialAction] = useState(initialAction == null);
 
-  // Animation function for status changes
   const startPulseAnimation = () => {
     Animated.sequence([
       Animated.timing(pulseAnim, { toValue: 1.2, duration: 300, useNativeDriver: true }),
@@ -30,57 +29,30 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     ]).start();
   };
 
-  // Function to fetch queue position
   const fetchQueuePosition = async () => {
     if (!order || !['pending', 'preparing'].includes(order.status)) return;
-    
+
     try {
-      // setPositionLoading(true);
-      // setPositionError(false);
-      
       const config = {
-        headers: {
-          'x-auth-token': token
-        }
+        headers: { 'x-auth-token': token }
       };
-
       const res = await axios.get(`${API_BASE_URL}/api/queues/user/position/${orderId}`, config);
-      console.log('Queue data:', res.data);
-
       setQueueInfo(res.data);
-      // setPositionLoading(false);
     } catch (err) {
       console.error('Error fetching queue position:', err);
-      // setPositionError(true);
-      // setPositionLoading(false);
     }
   };
 
   const fetchOrderDetails = async () => {
     try {
-      const config = {
-        headers: {
-          'x-auth-token': token
-        }
-      };
-
+      const config = { headers: { 'x-auth-token': token } };
       const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`, config);
-      
-      // Check if the status has changed and show notification
       if (order && order.status !== res.data.status) {
-        setPreviousStatus(order.status);
-        setStatusChangeVisible(true);
         startPulseAnimation();
-        
-        // Hide notification after 5 seconds
-        setTimeout(() => {
-          setStatusChangeVisible(false);
-        }, 5000);
+        setTimeout(() => {}, 5000);
       }
-      
       setOrder(res.data);
       setLoading(false);
-
     } catch (err) {
       console.error('Error fetching order details:', err);
       setLoading(false);
@@ -90,21 +62,15 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     fetchOrderDetails();
-    
-    // Poll for order updates
-    const orderInterval = setInterval(fetchOrderDetails, 20000); // Update every 20 seconds
-    
-    return () => clearInterval(orderInterval);
+    const interval = setInterval(fetchOrderDetails, 20000);
+    return () => clearInterval(interval);
   }, [orderId, initialAction]);
 
-  // Set up polling for queue position updates
   useEffect(() => {
     if (!order) return;
-    
-    // Only fetch and poll if the order is pending or preparing
     if (['pending', 'preparing'].includes(order.status)) {
       fetchQueuePosition();
-      const interval = setInterval(fetchQueuePosition, 15000); // Update every 15 seconds
+      const interval = setInterval(fetchQueuePosition, 15000);
       return () => clearInterval(interval);
     }
   }, [order]);
@@ -123,47 +89,15 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const handleCancelOrder = async () => {
     try {
       setCancelLoading(true);
-
-      const config = {
-        headers: {
-          'x-auth-token': token
-        }
-      };
-      
+      const config = { headers: { 'x-auth-token': token } };
       await axios.put(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {}, config);
-      
-      // Update local state
       setOrder({ ...order, status: 'cancelled' });
       setCancelLoading(false);
-
       navigation.goBack();
-
       Alert.alert('Success', 'Your order has been cancelled');
     } catch (err) {
       setCancelLoading(false);
       Alert.alert('Error', err.response?.data?.msg || 'Could not cancel your order');
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return '#f39c12';
-      case 'preparing': return '#3498db';
-      case 'ready': return '#2ecc71';
-      case 'completed': return '#27ae60';
-      case 'cancelled': return '#e74c3c';
-      default: return '#95a5a6';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Pending';
-      case 'preparing': return 'Preparing';
-      case 'ready': return 'Ready for Pickup';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
     }
   };
 
@@ -173,9 +107,11 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       const config = { headers: { 'x-auth-token': token } };
       await axios.post(`${API_BASE_URL}/api/stalls/${order.stall._id}/reviews`, {
         text: review,
+        rating,
         orderId: order._id
       }, config);
       setReview('');
+      setRating(0);
       setReviewSubmitted(true);
     } catch (err) {
       Alert.alert('Error', err.response?.data?.msg || 'Could not submit review');
@@ -183,12 +119,6 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       setSubmittingReview(false);
     }
   };
-
-  useEffect(() => {
-    fetchOrderDetails();
-    const interval = setInterval(fetchOrderDetails, 20000);
-    return () => clearInterval(interval);
-  }, [orderId, initialAction]);
 
   if (loading) {
     return <View style={styles.center}><Text>Loading order details...</Text></View>;
@@ -198,8 +128,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     return <View style={styles.center}><Text>Order not found</Text></View>;
   }
 
-  // Handle initial actions
-  if (!performedInitialAction){
+  if (!performedInitialAction) {
     if (initialAction === 'cancel' && order.status === 'pending') {
       setPerformedInitialAction(true);
       confirmCancelOrder();
@@ -218,7 +147,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
                 <Text style={{ color: '#7f8c8d' }}>Current queue: {queueInfo.currentNumber}</Text>
               )}
             </View>
-        
+
             <View style={{
               backgroundColor: getStatusColor(order.status),
               paddingHorizontal: 15,
@@ -263,6 +192,15 @@ const OrderDetailsScreen = ({ route, navigation }) => {
         {['cancelled', 'completed', 'ready'].includes(order.status) && !reviewSubmitted && (
           <Card containerStyle={{ marginHorizontal: 15 }}>
             <Text style={styles.sectionTitle}>Leave a Review</Text>
+
+            <AirbnbRating
+              count={5}
+              defaultRating={rating}
+              size={30}
+              showRating
+              onFinishRating={setRating}
+            />
+
             <Input
               placeholder="Write your review here..."
               value={review}
@@ -273,7 +211,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
               title="Submit Review"
               onPress={handleSubmitReview}
               loading={submittingReview}
-              disabled={!review.trim()}
+              disabled={!review.trim() || rating === 0}
             />
           </Card>
         )}
@@ -286,6 +224,28 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       </Animated.View>
     </ScrollView>
   );
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'pending': return '#f39c12';
+    case 'preparing': return '#3498db';
+    case 'ready': return '#2ecc71';
+    case 'completed': return '#27ae60';
+    case 'cancelled': return '#e74c3c';
+    default: return '#95a5a6';
+  }
+};
+
+const getStatusText = (status) => {
+  switch (status) {
+    case 'pending': return 'Pending';
+    case 'preparing': return 'Preparing';
+    case 'ready': return 'Ready for Pickup';
+    case 'completed': return 'Completed';
+    case 'cancelled': return 'Cancelled';
+    default: return status;
+  }
 };
 
 const styles = StyleSheet.create({
