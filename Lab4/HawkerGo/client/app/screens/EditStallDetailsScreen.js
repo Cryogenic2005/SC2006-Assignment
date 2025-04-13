@@ -59,8 +59,9 @@ const EditStallDetailsScreen = () => {
         headers: { 'x-auth-token': token },
       };
       const res = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, config);
-      if (res.data.length > 0) {
-        const stall = res.data[0];
+
+      if (res.data) {
+        const stall = res.data;
         setStallId(stall._id);
         setStallDetails({
           name: stall.name || '',
