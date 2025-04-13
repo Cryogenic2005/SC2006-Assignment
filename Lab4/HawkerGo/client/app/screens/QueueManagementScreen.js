@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Card, Button, Badge, Overlay, Icon } from 'react-native-elements';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
+import { useIsFocused } from '@react-navigation/native';
 
 const QueueManagementScreen = ({ route, navigation }) => {
   const [queue, setQueue] = useState(null);
@@ -12,17 +13,22 @@ const QueueManagementScreen = ({ route, navigation }) => {
   const [queueActive, setQueueActive] = useState(true);
   const [waitTime, setWaitTime] = useState(10);
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
-  // const [isFocused, setIsFocused] = useState(false);
+  const isFocused = useIsFocused();
   
   const auth = useSelector(state => state.auth);
   const { token } = auth;
   
   const { user } = useSelector(state => state.auth);
   const [stallId, setStallId] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchStallID();
+    }
+  }, [user]);
   
   useEffect(() => {
-    console.log('User:', user);
-    console.log('Stall ID:', stallId);
+    if (!isFocused) return;
 
     if (stallId != null)
       fetchQueueData();
@@ -31,7 +37,7 @@ const QueueManagementScreen = ({ route, navigation }) => {
     const interval = setInterval(fetchQueueData, 30000); // Poll every 30 seconds
     
     return () => clearInterval(interval);
-  }, [stallId]);
+  }, [stallId, isFocused]);
 
   const fetchStallID = async () => {
     try {
@@ -43,21 +49,21 @@ const QueueManagementScreen = ({ route, navigation }) => {
 
       const stallIdRes = await axios.get(`${API_BASE_URL}/api/stalls/owner/me`, config);
   
-      setStallId(stallIdRes.data._id);
+      setLoading(false);
+      setStallId(stallIdRes.data?._id);
     } catch (err) {
+      setLoading(false);
       console.error('Error fetching stall ID:', err);
       Alert.alert('Error', 'Could not fetch stall ID');
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchStallID();
-    }
-  }, [user]);
-
   const fetchQueueData = async () => {
     try {
+      if (!stallId) return;
+
+      setLoading(true);
+
       const config = {
         headers: {
           'x-auth-token': token
