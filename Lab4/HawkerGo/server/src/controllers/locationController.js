@@ -20,35 +20,53 @@ exports.getStallCoordinates = async (req, res) => {
   }
 };
 
-const Hawker = require('../models/Hawker'); // add this only once
+const Hawker = require('../models/Hawker'); // Make sure this model is correct
 
 exports.getNearbyHawkers = async (req, res) => {
-  const { latitude, longitude, radius = 2 } = req.body;
+  const { latitude, longitude } = req.body;
+
+  console.log('📍 Received coordinates from frontend:', latitude, longitude);
 
   try {
     const hawkers = await Hawker.find({});
-    const nearby = hawkers.filter(hawker => {
-      const [lng, lat] = hawker.location.coordinates;
-      const dist = getDistanceFromLatLonInKm(lat, lng, latitude, longitude);
-      return dist <= radius;
+    console.log('📦 Total hawkers in DB:', hawkers.length);
+
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      const toRad = angle => angle * (Math.PI / 180);
+      const R = 6371; // Earth's radius in km
+
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c * 1000; // Convert to meters
+    };
+
+    const nearbyHawkers = hawkers.filter(h => {
+      const coords = h.location?.coordinates;
+      if (!Array.isArray(coords) || coords.length < 2) {
+        console.warn(`⚠️ Skipped ${h.name || h._id}: invalid lat/lon`, h.location);
+        return false;
+      }
+
+      const [lon, lat] = coords;
+      const distance = getDistance(latitude, longitude, lat, lon);
+      console.log(`📏 ${h.name}: ${distance.toFixed(2)}m away`);
+
+      return distance <= 10000; // Within 30 km radius
     });
 
-    nearby.sort((a, b) => {
-      const [lngA, latA] = a.location.coordinates;
-      const [lngB, latB] = b.location.coordinates;
-
-      const distA = getDistanceFromLatLonInKm(latA, lngA, latitude, longitude);
-      const distB = getDistanceFromLatLonInKm(latB, lngB, latitude, longitude);
-
-      return distA - distB;
-    });
-
-    res.json(nearby);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch nearby hawkers' });
+    console.log(`✅ Nearby hawkers found: ${nearbyHawkers.length}`);
+    res.json(nearbyHawkers);
+  } catch (error) {
+    console.error('❌ Error fetching nearby hawkers:', error);
+    res.status(500).send('Server error');
   }
 };
+
 
 // Helper function
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {

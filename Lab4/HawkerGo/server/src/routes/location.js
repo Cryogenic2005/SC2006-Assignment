@@ -6,6 +6,6 @@ const locationController = require('../controllers/locationController');
 router.post('/geocode', locationController.getStallCoordinates);
 
 // Route to get nearby hawkers based on user's location
-router.post('/nearby-hawkers', locationController.getNearbyHawkers);
+router.post('/nearby', locationController.getNearbyHawkers);
 
 module.exports = router;

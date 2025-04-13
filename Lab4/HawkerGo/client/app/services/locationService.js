@@ -169,7 +169,8 @@ export const calculateRoute = async (startLat, startLng, endLat, endLng) => {
 
 export const getNearbyHawkers = async (latitude, longitude) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/location/nearby-hawkers`, {
+    const response = await axios.post(`${API_BASE_URL}/api/location/nearby`, {
+
       latitude,
       longitude
     });

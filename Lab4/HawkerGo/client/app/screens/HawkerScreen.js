@@ -83,19 +83,27 @@ const HawkersScreen = ({ navigation }) => {
     }
   };
 
-  //Fetch nearby hawkers from backend
-  const fetchNearbyHawkers = async () => {
-    setRefreshing(true);
-    try {
-      const location = await getCurrentLocation();
-      const nearby = await getNearbyHawkers(location.latitude, location.longitude);
-      setFilteredHawkers(nearby);
-    } catch (error) {
-      console.error('Error fetching nearby hawkers:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+// Fetch nearby hawkers from backend
+const fetchNearbyHawkers = async () => {
+  setRefreshing(true);
+  try {
+    const location = await getCurrentLocation();
+
+    const nearby = await getNearbyHawkers(
+      location.latitude,
+      location.longitude
+    );
+
+    console.log('📱 Nearby hawkers received in app:', nearby);
+
+    setFilteredHawkers(nearby);
+  } catch (error) {
+    console.error('Error fetching nearby hawkers:', error);
+  } finally {
+    setRefreshing(false);
+  }
+};
+
   
   const renderHawkerCard = ({ item }) => {
     let distance = null;
