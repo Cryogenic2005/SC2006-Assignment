@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card, Icon, Button } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
@@ -10,6 +10,11 @@ const ManageStallScreen = () => {
   const navigation = useNavigation();
   const { token } = useSelector((state) => state.auth);
   const [stall, setStall] = useState(null);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    fetchStallDetails();
+  }, [isFocused]);
 
   useEffect(() => {
     fetchStallDetails();
