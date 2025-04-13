@@ -131,7 +131,7 @@ const ProfileScreen = ({ navigation }) => {
           <Button
             title="View Analytics"
             buttonStyle={styles.analyticsButton}
-            onPress={() => {/* Navigate to analytics */}}
+            onPress={() => {navigation.navigate('ManageStallTab', { screen: 'StallAnalytics' })}}
             icon={{
               name: 'trending-up',
               color: '#fff',
