@@ -2,6 +2,7 @@ export default {
   name: "HawkerGo",
   slug: "hawkergo",
   version: "1.0.0",
+  scheme: "myapp",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   splash: {
