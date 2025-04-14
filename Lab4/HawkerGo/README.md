@@ -4,7 +4,7 @@
 
 The app will work with estimated crowd levels if the ML service is not running.
 
-1. Set up a Python environment (Python 3.11 recommended)
+1. Set up a Python environment (Python 3.12.9 recommended)
 
 2. Navigate to the ML model directory:
 
@@ -88,7 +88,7 @@ The app will work with estimated crowd levels if the ML service is not running.
 4. Install frontend dependencies:
 
    ```bash
-   npm install
+   npx expo install
    ```
 
 5. Start the Expo development server:
@@ -139,7 +139,7 @@ The app will work with estimated crowd levels if the ML service is not running.
 - Similar to the backend setup, ensure your `.env` file exists in the `server` directory and contains valid values (e.g. `JWT_SECRET`, `MONGO_URI`, etc.).
 - Tests use `Jest` and `Supertest` to simulate API calls and verify behavior.
 
-=======
+---
 
 # Running Frontend Tests
 
@@ -164,7 +164,3 @@ The app will work with estimated crowd levels if the ML service is not running.
    - Which tests passed
    - Which tests failed
    - Any related error messages or stack traces
-
-## Notes
-
-- Tests that fail for screens can be ignored for now.
