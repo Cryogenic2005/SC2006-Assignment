@@ -32,3 +32,7 @@ The project aims to:
 * Customize their stall details such as cuisine, menu, price range, and operating hours.
 * View stall reviews, ratings, and analytics.
 * Process orders from customers with a simple interface and queue based order handling system.
+
+## Setting up the application
+
+To setup the application please navigate to the [README file](Lab4/HawkerGo/README.md) in the Lab4/HawkerGo folder
