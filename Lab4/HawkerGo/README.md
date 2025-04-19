@@ -2,7 +2,6 @@
 
 ## ML Model Setup
 
-The app will work with estimated crowd levels if the ML service is not running.
 
 1. Set up a Python environment (Python 3.12.9 recommended)
 
